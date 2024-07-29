@@ -1,8 +1,10 @@
 package com.ormi.happyhouse.post.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
@@ -21,7 +23,7 @@ public class PostDto {
 
     private Long viewCount;
 
-    private LocalDate createdAt;
+    private Date createdAt;
 
     private Date updatedAt;
 
