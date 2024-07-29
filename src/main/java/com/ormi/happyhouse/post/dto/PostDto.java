@@ -1,5 +1,6 @@
 package com.ormi.happyhouse.post.dto;
 
+import com.ormi.happyhouse.post.domain.Post;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,7 +28,7 @@ public class PostDto {
 
     private Date updatedAt;
 
-    private boolean deleteYN;
+    private boolean deleteYn;
 
-    private boolean noticeYN;
+    private boolean noticeYn;
 }

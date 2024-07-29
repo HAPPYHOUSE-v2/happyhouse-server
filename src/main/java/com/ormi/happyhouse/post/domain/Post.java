@@ -1,17 +1,14 @@
 package com.ormi.happyhouse.post.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Date;
 
 @Entity
 @Table(name = "posts")
 @Getter
-@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Post {
@@ -32,7 +29,7 @@ public class Post {
 
     private Date updatedAt;
 
-    private boolean deleteYN;
+    private boolean deleteYn;
 
-    private boolean noticeYN;
+    private boolean noticeYn;
 }
