@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+</head>
+<body>
+    <main>
+        <section>
+            <h2>회원가입</h2>
+            <form th:action="@{/member/register}" method="post">
+                <div>
+                    <label for="email">이메일:</label>
+                    <input type="email"
+                           id="email"
+                           name="email" required>
+                </div>
+                <div>
+                    <label for="password">비밀번호:</label>
+                    <input type="password"
+                           id="password"
+                           name="password" required>
+                </div>
+                <div>
+                    <label for="nickname">닉네임:</label>
+                    <input type="text"
+                           id="nickname"
+                           name="nickname"required>
+                    <button type="button" onclick="checkNickname()">닉네임 중복 확인</button>
+                    <span id="nicknameResult"></span>
+                </div>
+                <button type="submit">회원가입</button>
+            </form>
+            <section>
+                <p>이미 계정이 있으신가요?</p>
+                <a th:href="@{/member/login}">로그인</a>
+            </section>
+        </section>
+        <!-- 회원가입 실패 시-->
+        <section th:if="${errorMsg}">
+            <p th:text="${errorMsg}"></p>
+        </section>
+    </main>
+    <script th:inline="javascript">
+        function checkNickname() {
+            var nickname = document.getElementById('nickname').value;
+            var resultSpan = document.getElementById('nicknameResult');
+
+            //서버 요청
+            var xhr = new XMLHttpRequest();
+            var url = "/member/duplicateNickname?nickname=" + encodeURIComponent(nickname);
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {  // 요청이 완료되었을 때만 처리
+                    if (xhr.status === 200) {
+                        resultSpan.textContent = '사용 가능한 닉네임입니다.';
+                        resultSpan.style.color = 'green';
+                    } else if (xhr.status === 409) {
+                        resultSpan.textContent = '이미 사용 중인 닉네임입니다.';
+                        resultSpan.style.color = 'red';
+                    } else {
+                        resultSpan.textContent = '닉네임 확인 중 오류가 발생했습니다.';
+                        resultSpan.style.color = 'red';
+                        console.error('HTTP error:', xhr.status, xhr.statusText);
+                    }
+                }
+            };
+            xhr.open('GET', url, true);
+            xhr.send();
+
+        }
+
+        document.querySelector('form').onsubmit = function(e) {
+            var resultSpan = document.getElementById('nicknameResult');
+            if (resultSpan.textContent !== '사용 가능한 닉네임입니다.') {
+                e.preventDefault();
+                alert('닉네임 중복 여부를 확인해주세요.');
+            }
+        };
+    </script>
+</body>
+</html>

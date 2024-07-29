@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <main>
+        <section>
+            <h2>로그인</h2>
+            <form th:action="@{/member/login}" method="post">
+                <div>
+                    <label for="email">이메일:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div>
+                    <label for="password">비밀번호:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">로그인</button>
+            </form>
+            <section>
+                <p>아직 계정이 없으신가요?</p>
+                <a th:href="@{/member/register}">회원가입</a>
+            </section>
+        </section>
+    </main>
+</body>
+</html>
