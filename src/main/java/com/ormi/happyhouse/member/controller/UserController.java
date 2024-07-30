@@ -62,6 +62,30 @@ public class UserController {
         boolean isDuplicated = userService.isDuplicatedNickname(nickname);
         return isDuplicated ? ResponseEntity.status(HttpStatus.CONFLICT).body(false) : ResponseEntity.ok(isDuplicated);
     }
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    @PostMapping("/send-verification-email")
+    public ResponseEntity<String> sendVerificationEmail(@RequestParam("email") String email) {
+        log.info("send-verification-email :{}", email);
+        userService.sendVerificationEmail(email);
+        return ResponseEntity.ok("인증 이메일이 전송되었습니다.");
+    }
+
+    @ResponseBody
+    @PostMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestBody Map<String, String> mailCode) {
+        //public ResponseEntity<String> verifyEmail(@RequestParam("email") String email, @RequestParam("code") String code) {
+        String email = mailCode.get("email");
+        String code = mailCode.get("code");
+        log.info("인증 이메일 :{}", email);
+        log.info("인증 코드 :{}", code);
+        boolean isVerified = userService.verifyEmailCode(email, code);
+        if (isVerified) {
+            return ResponseEntity.ok("이메일이 성공적으로 인증되었습니다.");
+        } else {
+            return ResponseEntity.badRequest().body("인증 코드가 올바르지 않습니다.");
+        }
+    }
 
     //로그인 페이지 이동
     @GetMapping("/login")

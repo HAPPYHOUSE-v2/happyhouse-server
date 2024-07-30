@@ -36,7 +36,9 @@ public class SpringSecurityConfig {
                 //STATLESS는 jwt과 어울림
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/","/member/register", "/member/login","/member/logout", "/member/refresh","/member/duplicateNickname", "/member/check-auth").permitAll()
+                        .requestMatchers("/","/member/register", "/member/login","/member/logout",
+                                "/member/refresh","/member/duplicateNickname", "/member/check-auth",
+                                "/member/send-verification-email", "/member/verify-email").permitAll()
                         .requestMatchers("/static/**").permitAll()
                         .anyRequest().authenticated()
                 )

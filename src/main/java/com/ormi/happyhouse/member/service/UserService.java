@@ -13,8 +13,10 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,6 +25,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import java.util.concurrent.TimeUnit;
 
 //Spring Security에서 사용자 정보를 가져오는 인터페이스
 @Slf4j
@@ -33,32 +37,46 @@ public class UserService implements UserDetailsService {
     //private final PasswordEncoder passwordEncoder; //순환참조
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final EmailService emailService;
+    //private final StringRedisTemplate redisTemplate;
+    private final @Qualifier("stringRedisTemplate") StringRedisTemplate redisTemplate;
 
     // 회원가입
     @Transactional
     public void register(UserDto userDto) {
-      // 이메일 검사
-      if (!StringUtils.hasText(userDto.getEmail())) {
-        throw new UserRegistrationException("이메일은 필수 입력 항목입니다.");
-      }
-      try {
-          BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-          Users newUser =
-                Users.builder()
-                        .email(userDto.getEmail())
-                        .nickname(userDto.getNickname())
-                        .password(passwordEncoder.encode(userDto.getPassword())) // 암호화 저장
-                        .status(0)
-                        .role(UserRole.USER)
-                        .provider(Provider.LOCAL)
-                        .build();
-          usersRepository.save(newUser);
-      } catch (DataIntegrityViolationException de) {
-        log.error("등록 중 오류 ", de);
-        throw new UserRegistrationException("등록 중 오류 발생. 이메일이나 닉네임이 이미 사용 중일 수 있습니다.", de);
-      } catch (Exception e) {
-        log.error("Unexpected error ", e);
-      }
+        // 이메일 검사
+        if (!StringUtils.hasText(userDto.getEmail())) {
+            throw new UserRegistrationException("이메일은 필수 입력 항목입니다.");
+        }
+        // 이메일 중복 체크
+        if (usersRepository.existsByEmail(userDto.getEmail())) {
+            throw new UserRegistrationException("이미 사용 중인 이메일입니다.");
+        }
+        // 이메일 인증 상태 확인
+        Boolean isVerified = redisTemplate.opsForValue().get("EMAIL_VERIFIED:" + userDto.getEmail()) != null;
+        if (!isVerified) {
+            throw new UserRegistrationException("이메일 인증이 필요합니다.");
+        }
+        try {
+            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            Users newUser =
+                    Users.builder()
+                            .email(userDto.getEmail())
+                            .nickname(userDto.getNickname())
+                            .password(passwordEncoder.encode(userDto.getPassword())) // 암호화 저장
+                            .status(0)
+                            .role(UserRole.USER)
+                            .provider(Provider.LOCAL)
+                            .build();
+              usersRepository.save(newUser);
+              // 인증 완료 후 Redis에서 인증 정보 삭제
+             redisTemplate.delete("EMAIL_VERIFIED:" + userDto.getEmail());
+        } catch (DataIntegrityViolationException de) {
+            log.error("등록 중 오류 ", de);
+            throw new UserRegistrationException("등록 중 오류 발생. 이메일이나 닉네임이 이미 사용 중일 수 있습니다.", de);
+        } catch (Exception e) {
+            log.error("Unexpected error ", e);
+        }
     }
     //닉네임 중복확인
     public boolean isDuplicatedNickname(String nickname) {
@@ -75,6 +93,23 @@ public class UserService implements UserDetailsService {
               .password(user.getPassword())
               .roles("USER")
               .build();
+    }
+    // 이메일 인증 코드 전송
+    public void sendVerificationEmail(String email) {
+        emailService.sendVerificationEmail(email);
+    }
+
+    // 이메일 인증 코드 확인
+    public boolean verifyEmailCode(String email, String code) {
+        String storedCode = redisTemplate.opsForValue().get("EMAIL_CODE:" + email);
+        log.info("저장되어 있는 이메일과 인증코드 {}: {}", email, storedCode);
+        log.info("받은 인증코드 : {}", code);
+        if (storedCode != null && storedCode.equals(code)) {
+            // 인증 성공 시 이메일 인증 상태를 Redis에 저장
+            redisTemplate.opsForValue().set("EMAIL_VERIFIED:" + email, "true", 30, TimeUnit.MINUTES);
+            return true;
+        }
+        return false;
     }
     //JWT 로그인 (+ Refresh 토큰)
     //public Cookie loginWithJwt(String email, String password){
@@ -99,17 +134,6 @@ public class UserService implements UserDetailsService {
                         .accessToken(accessToken)
                         .refreshTokenCookie(refreshTokenCookie)
                         .build();
-                /*
-                //Access Token을 쿠키에 저장
-                Cookie jwtCookie = new Cookie("jwt_token", accessToken);
-                jwtCookie.setMaxAge(600);
-                jwtCookie.setPath("/");
-                jwtCookie.setHttpOnly(true);
-                //return jwtCookie;
-                return LoginResponseDto.builder()
-                        .accessTokenCookie(jwtCookie)
-                        .refreshToken(refreshToken).build();
-                */
             }else {
                 throw new BadCredentialsException("Invalid password");
             }

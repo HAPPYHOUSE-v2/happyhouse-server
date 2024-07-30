@@ -15,6 +15,13 @@
                     <input type="email"
                            id="email"
                            name="email" required>
+                    <button type="button" onclick="sendVerificationEmail()">인증 메일 발송</button>
+                </div>
+                <div id="verificationCodeSection" style="display:none;">
+                    <label for="verificationCode">인증 코드:</label>
+                    <input type="text" id="verificationCode" name="verificationCode">
+                    <button type="button" onclick="verifyEmail()">인증 확인</button>
+                    <span id="emailResult"></span>
                 </div>
                 <div>
                     <label for="password">비밀번호:</label>
@@ -43,6 +50,53 @@
         </section>
     </main>
     <script th:inline="javascript">
+        let isEmailVerified = false;
+
+        function sendVerificationEmail() {
+            var email = document.getElementById('email').value;
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/member/send-verification-email', true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert('인증 메일이 발송되었습니다. 이메일을 확인해주세요.');
+                    document.getElementById('verificationCodeSection').style.display = 'block';
+                } else if (xhr.readyState === 4) {
+                    alert('인증 메일 발송에 실패했습니다.');
+                }
+            };
+            xhr.send('email=' + encodeURIComponent(email));
+        }
+
+        function verifyEmail() {
+            var email = document.getElementById('email').value;
+            var code = document.getElementById('verificationCode').value;
+            var emailResultSpan = document.getElementById('emailResult');
+
+            console.log("인증코드", code);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/member/verify-email', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            //xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    alert('이메일이 성공적으로 인증되었습니다.');
+                    isEmailVerified = true;
+                    emailResultSpan.textContent = '이메일 인증 완료됐습니다.';
+                    emailResultSpan.style.color = 'green';
+                } else if (xhr.readyState === 4) {
+                    alert('이메일 인증에 실패했습니다.');
+                    isEmailVerified = false;
+                    emailResultSpan.textContent = '이메일 인증 실패했습니다.';
+                    emailResultSpan.style.color = 'red';
+                }
+                console.log(xhr.responseText);  // 서버 응답 로그
+            };
+            //xhr.send('email=' + encodeURIComponent(email) + '&code=' + encodeURIComponent(code));
+            var data = JSON.stringify({email: email, code: code});
+            xhr.send(data);
+        }
+
         function checkNickname() {
             var nickname = document.getElementById('nickname').value;
             var resultSpan = document.getElementById('nicknameResult');
@@ -75,6 +129,11 @@
             if (resultSpan.textContent !== '사용 가능한 닉네임입니다.') {
                 e.preventDefault();
                 alert('닉네임 중복 여부를 확인해주세요.');
+            }
+            if (!isEmailVerified) {
+                e.preventDefault();
+                alert('이메일 인증을 완료해주세요.');
+                return;
             }
         };
     </script>
