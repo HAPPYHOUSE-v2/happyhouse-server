@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>회원가입</title>
+    <link rel="shortcut icon" href="#">
 </head>
 <body>
     <main>
@@ -67,9 +68,8 @@
             };
             xhr.open('GET', url, true);
             xhr.send();
-
         }
-
+        //회원가입 시 중복 확인 안 하거나 중복된 닉네임인 경우 체크
         document.querySelector('form').onsubmit = function(e) {
             var resultSpan = document.getElementById('nicknameResult');
             if (resultSpan.textContent !== '사용 가능한 닉네임입니다.') {

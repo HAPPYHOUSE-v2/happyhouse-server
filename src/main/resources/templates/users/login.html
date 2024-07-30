@@ -1,29 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>로그인</title>
+    <link rel="shortcut icon" href="#">
 </head>
 <body>
-    <main>
+<main>
+    <section>
+        <h2>로그인</h2>
+        <form id="loginForm">
+            <div>
+                <label for="email">이메일:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div>
+                <label for="password">비밀번호:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">로그인</button>
+        </form>
+        <div id="errorMessage" style="color: red;"></div>
         <section>
-            <h2>로그인</h2>
-            <form th:action="@{/member/login}" method="post">
-                <div>
-                    <label for="email">이메일:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div>
-                    <label for="password">비밀번호:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <button type="submit">로그인</button>
-            </form>
-            <section>
-                <p>아직 계정이 없으신가요?</p>
-                <a th:href="@{/member/register}">회원가입</a>
-            </section>
+            <p>아직 계정이 없으신가요?</p>
+            <a th:href="@{/member/register}">회원가입</a>
         </section>
-    </main>
+    </section>
+</main>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/member/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            }),
+            credentials: 'include' // 쿠키를 포함하기 위해 필요
+        })
+            .then(response => {
+                if (response.ok) {
+                    // 액세스 토큰 추출 및 저장
+                    const accessToken = response.headers.get('Authorization');
+                    if (accessToken && accessToken.startsWith('Bearer ')) {
+                        localStorage.setItem('accessToken', accessToken.substring(7));
+                    }
+                    return response.json();
+                } else {
+                    throw new Error('Login failed');
+                }
+            })
+            .then(data => {
+                console.log('Login successful', data);
+                window.location.href = '/';
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                document.getElementById('errorMessage').textContent = '로그인 실패: ' + error.message;
+            });
+        /*
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/member/login', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.withCredentials = true;
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                // 로그인 성공 시 메인 페이지로 리다이렉트
+                console.log(xhr);
+                window.location.href = '/';
+            } else {
+                // 로그인 실패 시 에러 메시지 표시
+                document.getElementById('errorMessage').textContent = '로그인 실패: ' + xhr.responseText;
+            }
+        };
+
+        xhr.onerror = function() {
+            document.getElementById('errorMessage').textContent = '네트워크 오류 발생';
+        };
+
+        var data = JSON.stringify({
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value
+        });
+
+        xhr.send(data);
+        */
+    });
+    // 액세스 토큰을 사용하여 인증된 요청을 보내는 함수
+    function sendAuthenticatedRequest(url, method, body) {
+        const accessToken = localStorage.getItem('accessToken');
+        return fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(body),
+            credentials: 'include'
+        }).then(response => {
+            if (response.status === 401) {
+                // 액세스 토큰이 만료된 경우, 리프레시 토큰으로 갱신
+                return refreshAccessToken().then(() => {
+                    // 새 액세스 토큰으로 원래 요청 재시도
+                    return sendAuthenticatedRequest(url, method, body);
+                });
+            }
+            return response.json();
+        });
+    }
+
+    // 액세스 토큰 갱신 함수
+    function refreshAccessToken() {
+        return fetch('/member/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        }).then(response => {
+            if (response.ok) {
+                const newAccessToken = response.headers.get('Authorization');
+                if (newAccessToken && newAccessToken.startsWith('Bearer ')) {
+                    localStorage.setItem('accessToken', newAccessToken.substring(7));
+                }
+            } else {
+                throw new Error('Token refresh failed');
+            }
+        });
+    }
+</script>
 </body>
 </html>

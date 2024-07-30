@@ -1,24 +1,117 @@
 <!DOCTYPE html>
-<html lang="ko"
-      xmlns:th="http://www.thymeleaf.org"
-        xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <link rel="shortcut icon" href="#">
     <title>HAPPY HOUSE</title>
 </head>
 <body>
     <h1>Spring Boot Thymeleaf Page</h1>
-    <!--로그인 시-->
-    <section sec:authorize="isAuthenticated()">
-        <p>환영합니다, <span sec:authentication="name"></span>님!</p>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit">로그아웃</button>
-        </form>
-    </section>
+    <section id="authSection">
 
-    <section sec:authorize="isAnonymous()">
-        <a th:href="@{/member/login}">로그인</a>
-        <a th:href="@{/member/register}">회원가입</a>
     </section>
+    <script>
+        function checkAuthStatus() {
+            fetch('/member/check-auth', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                },
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else if (response.status === 401) {
+                        throw new Error('Unauthorized');
+                    }
+                    throw new Error('Server error');
+                })
+                .then(data => {
+                    if (data.isLoggedIn) {
+                        document.getElementById('authSection').innerHTML = `
+                    <section>
+                        <p>환영합니다, ${data.email}님!</p>
+                        <button onclick="logout()">로그아웃</button>
+                    </section>
+                `;
+                    } else {
+                        showLoginRegisterLinks();
+                    }
+                })
+                .catch(error => {
+                    if (error.message === 'Unauthorized') {
+                        return refreshToken();
+                    }
+                    console.error('인증 상태 확인 중 오류 발생:', error);
+                    showLoginRegisterLinks();
+                });
+        }
+
+        function refreshToken() {
+            fetch('/member/refresh', {
+                method: 'POST',
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        const newAccessToken = response.headers.get('Authorization');
+                        if (newAccessToken && newAccessToken.startsWith('Bearer ')) {
+                            localStorage.setItem('accessToken', newAccessToken.substring(7));
+                            checkAuthStatus(); // 새 토큰으로 다시 인증 상태 확인
+                        }
+                    } else {
+                        throw new Error('Refresh failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('토큰 갱신 중 오류 발생:', error);
+                    localStorage.removeItem('accessToken');
+                    showLoginRegisterLinks();
+                });
+        }
+        function getEmailFromToken(token) {
+            const payload = token.split('.')[1]; // JWT의 두 번째 부분(페이로드) 추출
+            const decodedPayload = JSON.parse(atob(payload)); // Base64 디코딩 후 JSON으로 변환
+            return decodedPayload.email; // 이메일 정보 반환
+        }
+        function logout() {
+            const accessToken = localStorage.getItem('accessToken');
+            const email = getEmailFromToken(accessToken); // 토큰에서 이메일 추출
+
+            fetch('/member/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + accessToken
+                },
+                credentials: 'include',
+                body: JSON.stringify({ email: email }) // 추출한 이메일 정보를 본문에 포함
+            })
+                .then(response => {
+                    if (response.ok) {
+                        localStorage.removeItem('accessToken');
+                        window.location.reload();
+                    } else {
+                        throw new Error('Logout failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('로그아웃 중 오류 발생:', error);
+                });
+        }
+
+        function showLoginRegisterLinks() {
+            document.getElementById('authSection').innerHTML = `
+            <section>
+                <a href="/member/login">로그인</a>
+                <a href="/member/register">회원가입</a>
+            </section>
+        `;
+        }
+
+        // 페이지 로드 시 인증 상태 확인
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    </script>
 </body>
 </html>
