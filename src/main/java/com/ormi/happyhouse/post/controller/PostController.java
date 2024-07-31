@@ -1,5 +1,6 @@
 package com.ormi.happyhouse.post.controller;
 
+import com.ormi.happyhouse.post.domain.Post;
 import com.ormi.happyhouse.post.dto.PostDto;
 import com.ormi.happyhouse.post.service.PostService;
 import org.springframework.data.domain.Page;
@@ -54,5 +55,14 @@ public class PostController {
         model.addAttribute("searchTitle", title);
 
         return "post/list";
+    }
+
+    // 게시글 상세 조회
+    @GetMapping("/{post_id}")
+    public String showPostDetail(@PathVariable("post_id") Long postId, Model model) {
+        PostDto post = postService.showPostDetail(postId);
+        model.addAttribute("post", post);
+//        model.addAttribute("comments", post.getComments());
+        return "post/detail";
     }
 }
