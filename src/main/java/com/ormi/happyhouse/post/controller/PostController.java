@@ -22,14 +22,14 @@ public class PostController {
         this.postService = postService;
     }
 
-    // 게시글 생성
+    // Create: 게시글 생성
     @PostMapping
     public String savePost(@RequestBody PostDto postDto, Model model) {
         postService.savePost(postDto);
         return "redirect:/post";
     }
 
-    // 게시글 목록 조회
+    // Read: 게시글 목록 조회
     @GetMapping
     public String showAllPost(
             Model model,
@@ -57,12 +57,19 @@ public class PostController {
         return "post/list";
     }
 
-    // 게시글 상세 조회
+    // Read: 게시글 상세 조회
     @GetMapping("/{post_id}")
     public String showPostDetail(@PathVariable("post_id") Long postId, Model model) {
         PostDto post = postService.showPostDetail(postId);
         model.addAttribute("post", post);
 //        model.addAttribute("comments", post.getComments());
         return "post/detail";
+    }
+
+    // Update: 게시글 수정
+    @PutMapping("/{post_id}")
+    public String updatePost(@PathVariable("post_id") Long postId, @RequestBody PostDto postDto) {
+        postService.updatePost(postId, postDto);
+        return "redirect:/post/" + postId;
     }
 }
