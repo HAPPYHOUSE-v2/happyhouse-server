@@ -79,4 +79,23 @@ public class PostService {
                 .build();
         postRepository.save(updatedPost);
     }
+
+    // Delete: 게시글 삭제 메서드
+    public void deletePost(Long postId) {
+        Optional<Post> postById = postRepository.findById(postId);
+        Post post = postById.orElseThrow(()-> new IllegalArgumentException("post not found"));
+
+        Post deletedPost = new Post().builder()
+                .postId(post.getPostId())
+                .userId(post.getUserId())
+                .title(post.getTitle())
+                .content(post.getContent())
+                .viewCount(post.getViewCount())
+                .createdAt(post.getCreatedAt())
+                .updatedAt(post.getUpdatedAt())
+                .noticeYn(post.isNoticeYn())
+                .deleteYn(true)
+                .build();
+        postRepository.delete(deletedPost);
+    }
 }

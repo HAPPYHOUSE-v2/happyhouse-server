@@ -72,4 +72,11 @@ public class PostController {
         postService.updatePost(postId, postDto);
         return "redirect:/post/" + postId;
     }
+
+    // Delete: 게시글 삭제
+    @PutMapping("/delete/{post_id}")
+    public String deletePost(@PathVariable("post_id") Long postId) {
+        postService.deletePost(postId);
+        return "redirect:/post";
+    }
 }
