@@ -34,7 +34,7 @@ public class PostDto {
 
 
     public Post toEntity() {
-        Post post = new Post().builder()
+        return new Post().builder()
                 .userId(this.getUserId())
                 .title(this.getTitle())
                 .content(this.getContent())
@@ -44,7 +44,6 @@ public class PostDto {
                 .deleteYn(this.isDeleteYn())
                 .noticeYn(this.isNoticeYn())
                 .build();
-        return post;
     }
 
     public static PostDto fromEntity(Post post) {
