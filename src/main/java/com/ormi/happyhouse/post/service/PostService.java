@@ -26,8 +26,8 @@ public class PostService {
         postRepository.save(postDto.toEntity());
     }
 
-    public Page<PostDto> showAllPost(Pageable pageable) {
-        Page<Post> allPostPage = postRepository.findByDeleteYn(false, pageable);
+    public Page<PostDto> showAllPost(String title, Pageable pageable) {
+        Page<Post> allPostPage = postRepository.findByDeleteYnFalseAndTitleContains(title, pageable);
         return allPostPage.map(PostDto::fromEntity);
     }
 }

@@ -9,10 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/post")
@@ -24,16 +21,18 @@ public class PostController {
         this.postService = postService;
     }
 
+    // 게시글 생성
     @PostMapping
     public String savePost(@RequestBody PostDto postDto, Model model) {
         postService.savePost(postDto);
         return "redirect:/post";
     }
 
+    // 게시글 목록 조회
     @GetMapping
     public String showAllPost(
-            Model model
-            ,
+            Model model,
+            @RequestParam(defaultValue = "") String title,
             @PageableDefault
             @SortDefault.SortDefaults({
                     @SortDefault(sort = "noticeYn", direction = Sort.Direction.DESC),
@@ -41,7 +40,7 @@ public class PostController {
             })
             Pageable pageable
     ) {
-        Page<PostDto> posts = postService.showAllPost(pageable);
+        Page<PostDto> posts = postService.showAllPost(title, pageable);
 
         int nowPage = posts.getPageable().getPageNumber() + 1;
         int startPage = Math.max(nowPage - 2, 1);
@@ -52,7 +51,7 @@ public class PostController {
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
         model.addAttribute("totalPage", posts.getTotalPages());
-        model.addAttribute("isSearchPage", false);
+        model.addAttribute("searchTitle", title);
 
         return "post/list";
     }
