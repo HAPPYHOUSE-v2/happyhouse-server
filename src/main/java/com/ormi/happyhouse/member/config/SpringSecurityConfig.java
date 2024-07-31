@@ -3,6 +3,7 @@ package com.ormi.happyhouse.member.config;
 import com.ormi.happyhouse.member.jwt.JwtFilter;
 import com.ormi.happyhouse.member.jwt.JwtUtil;
 import com.ormi.happyhouse.member.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -27,45 +33,46 @@ public class SpringSecurityConfig {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    @Bean //Spring Security 필터 체인 구성
+    //Spring Security 필터 체인 구성
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(withDefaults())  // CORS 설정 추가
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                //서버는 클라이언트의 세션 정보를 저장하지 않고, 매 요청마다 클라이언트가 제공하는 인증 정보를 기반으로 인증을 수행
-                //STATLESS는 jwt과 어울림
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/","/member/register", "/member/login","/member/logout",
-                                "/member/refresh","/member/duplicateNickname", "/member/check-auth",
-                                "/member/send-verification-email", "/member/verify-email").permitAll()
-                        .requestMatchers("/static/**").permitAll()
+                        .requestMatchers("/", "/member/register", "/member/login",
+                                "/member/refresh", "/member/duplicateNickname",
+                                "/member/send-verification-email", "/member/verify-email", "/member/logout").permitAll()
+                        .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
+                        .requestMatchers( "/member/check-auth", "/member/mypage").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+                        })
+                )
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable());
 
         return http.build();
-        /*
-        //http 요청 인증 설정
-        http.authorizeHttpRequests((requests) -> requests
-                        //.requestMatchers("/member/register", "/member/login", "/member/duplicateNickname").permitAll() //모든 사용자에게 허용(그 외 모든 요청은 인증된 사용자만 가능)
-                        .anyRequest().authenticated()
-                )
-                .formLogin((form) -> form
-                        .loginPage("/member/login")
-                        .loginProcessingUrl("/member/login") //로그인 요청 처리 URL
-                        .usernameParameter("email")  // loadByUserName에서 email
-                        .defaultSuccessUrl("/", true) // 로그인 성공 시 메인으로 리다이렉트
-                        .failureUrl("/member/login?error")
-                        .permitAll()
-                ).logout((logout) -> logout
-                        .logoutSuccessUrl("/") //로그아웃 성공 시 메인
-                        .permitAll());
+    }
 
-        return http.build();
-        */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8089")); // 프론트엔드 주소
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
     @Bean //비밀번호 암호화 저장
     public PasswordEncoder passwordEncoder() {

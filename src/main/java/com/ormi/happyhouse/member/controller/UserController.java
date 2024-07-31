@@ -74,7 +74,6 @@ public class UserController {
     @ResponseBody
     @PostMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestBody Map<String, String> mailCode) {
-        //public ResponseEntity<String> verifyEmail(@RequestParam("email") String email, @RequestParam("code") String code) {
         String email = mailCode.get("email");
         String code = mailCode.get("code");
         log.info("인증 이메일 :{}", email);
@@ -98,9 +97,6 @@ public class UserController {
     public ResponseEntity<?> login(@RequestBody LoginRequestDto loginRequestDto,
                                    HttpServletResponse response) {
         try {
-            //Cookie jwtCookie = userService.loginWithJwt(loginRequestDto.getEmail(), loginRequestDto.getPassword());
-            //response.addCookie(jwtCookie);
-            //return ResponseEntity.ok().build();
             LoginResponseDto loginResponseDto = userService.loginWithJwt(loginRequestDto.getEmail(), loginRequestDto.getPassword());
             // Refresh Token을 쿠키에 추가
             response.addCookie(loginResponseDto.getRefreshTokenCookie());
@@ -110,27 +106,26 @@ public class UserController {
             return ResponseEntity.ok()
                     .headers(headers)
                     .body(Map.of("message","Login successful"));
-            //response.addCookie(loginResponseDto.getAccessTokenCookie());
-            //return ResponseEntity.ok(loginResponseDto);
-        } catch (UsernameNotFoundException | BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid email or password"));
+        } catch (BadCredentialsException bce) {
+            //비밀번호가 틀린 경우
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "이메일 또는 비밀번호가 옳지 않습니다."));
+        } catch (UsernameNotFoundException unfe){
+            // 사용자를 찾을 수 없는 경우
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", "해당 계정을 찾을 수 없습니다."));
+        }catch (Exception e){
+            // 기타 예외 처리
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "로그인 오류"));
         }
     }
     //JWT 로그아웃 처리 : 서버에서 리프레시 토큰 삭제, 클라이언트에서 리프레시 쿠키 무효화
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody LogOutRequestDto logOutReq, HttpServletResponse response) {
-        //Cookie logoutCookie = userService.setLogoutCookie();
-        //Cookie logoutCookie = userService.setLogoutCookie(logOutReq.getEmail());
         userService.setLogoutCookie(logOutReq.getEmail(), response);
-        //response.addCookie(logoutCookie);
         return ResponseEntity.ok().body("로그아웃 성공");
     }
-    /*@PostMapping("/refresh")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest refreshRequest, HttpServletResponse response) {
-        LoginResponseDto refreshResponse = userService.refreshToken(refreshRequest.getEmail(), refreshRequest.getRefreshToken());
-        response.addCookie(refreshResponse.getAccessTokenCookie());
-        return ResponseEntity.ok(refreshResponse);
-    }*/
     @PostMapping("/refresh") //새로운 액세스 토큰을 응답 본문에 포함하고 새 리프레시 토큰 생성
     public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken,
                                           HttpServletResponse response) {
@@ -142,7 +137,6 @@ public class UserController {
             LoginResponseDto refreshResponse = userService.refreshToken(email, refreshToken);
             // Refresh Token을 쿠키에 추가
             response.addCookie(refreshResponse.getRefreshTokenCookie());
-
             // Access Token을 응답 본문에 포함
             return ResponseEntity.ok().body(Map.of("accessToken", refreshResponse.getAccessToken()));
         } catch (InvalidRefreshTokenException e) {
@@ -152,16 +146,16 @@ public class UserController {
     //JWT 클라이언트 인증 상태 확인 / JWT 토큰 유효성 검증
     @GetMapping("/check-auth")
     public ResponseEntity<?> checkAuth(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        log.info("check-auto 요청");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
-            /*if (jwtUtil.validateToken(token)) {
-                String email = jwtUtil.getEmailFromToken(token);
-                return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email));
-            }*/
             try {
+                log.info("jwtUtil에서 토큰 유효 확인 :{}", token);
                 if (jwtUtil.validateToken(token)) {
                     String email = jwtUtil.getEmailFromToken(token);
-                    return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email));
+                    log.info("토큰에서 메일 추출 :{}", email);
+                    String nickname = userService.findUserByEmail(email);
+                    return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email, "nickname", nickname));
                 }
             } catch (ExpiredJwtException e) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -170,40 +164,15 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("isLoggedIn", false, "error", "Invalid token"));
             }
+            log.info("check-auto token :{}", token);
         }
         return ResponseEntity.ok(Map.of("isLoggedIn", false));
     }
-    /*@GetMapping("/check-auth")
-    public ResponseEntity<?> checkAuth(@CookieValue(name = "jwt_token", required = false) String token) {
-        if (token != null && jwtUtil.validateToken(token)) {
-            String email = jwtUtil.getEmailFromToken(token);
-            return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email));
-        }
-        return ResponseEntity.ok(Map.of("isLoggedIn", false));
-    }*/
 
-    /*
-    //jwt 로그인 처리
-    @PostMapping("/login")
-    public String login(@ModelAttribute LoginRequestDto loginRequestDto,
-                        HttpServletResponse response,
-                        RedirectAttributes redirectAttributes) {
-        try {
-            Cookie jwtCookie = userService.loginWithJwt(loginRequestDto.getEmail(), loginRequestDto.getPassword());
-            response.addCookie(jwtCookie);
-            return "redirect:/"; // 메인 페이지로 리다이렉트
-        } catch (UsernameNotFoundException | BadCredentialsException e) {
-            log.error("로그인 실패", e);
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid email or password");
-            return "redirect:/member/login";
-        }
+    //마이페이지 이동
+    @GetMapping("/mypage")
+    public String showMypage(Model model){
+        //model.addAttribute("user", new UserDto());
+        return "users/mypage";
     }
-    //jwt 로그아웃 처리
-    @GetMapping("/logout")
-    public String logout(HttpServletResponse response) {
-        Cookie logoutCookie = userService.setLogoutCookie();
-        response.addCookie(logoutCookie);
-        return "redirect:/member/login";
-    }
-    */
 }

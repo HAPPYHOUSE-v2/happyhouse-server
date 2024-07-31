@@ -1,18 +1,18 @@
 package com.ormi.happyhouse.member.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.security.SignatureException;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtUtil {
     @Value("${jwt.secret-key}")
@@ -52,19 +52,27 @@ public class JwtUtil {
         return generateToken(email, refreshTokenValidity, "REFRESH");
     }
 
+    //토큰 검증
     public boolean validateToken(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith((SecretKey) key)
+                    .verifyWith((SecretKey) key) //비밀 키 설정
                     .build()
-                    .parseSignedClaims(token)
+                    .parseSignedClaims(token) //JWT 파싱 및 건증
                     .getPayload();
             return !claims.getExpiration().before(new Date());
-        } catch (ExpiredJwtException exje) {
-            return false; // 토큰 만료
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
+        //} catch (SignatureException e) {
+        //    log.error("토큰 서명 오류: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.error("잘못된 토큰 형식: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            log.error("토큰 만료: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            log.error("지원하지 않는 토큰: {}", e.getMessage());
+        } catch (JwtException e) {
+            log.error("토큰 검증 오류: {}", e.getMessage());
         }
+        return false;
     }
 
     public String getEmailFromToken(String token) {

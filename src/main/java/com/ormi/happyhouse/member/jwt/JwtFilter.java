@@ -27,14 +27,13 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
                                     throws ServletException, IOException {
-        // 공개 접근 경로에 대해서는 필터 처리 skip( 공개된 페이지는 토큰 인증 X)
-        if (isPublicPath(request.getRequestURI())) {
+        // 로그아웃 요청인 경우 토큰 검증 수행 skip (사용자 토큰이 이미 만료되었을 경우, 토큰검증 시 로그아웃 불가)
+        if (isLogoutRequest(request)) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        // 로그아웃 요청인 경우 필터 처리 skip
-        if (isLogoutRequest(request)) {
+        // 공개 접근 경로에 대해서는 필터 처리 skip( 공개된 페이지는 토큰 인증 X)
+        if (isPublicPath(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -67,6 +66,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.equals("/member/login") ||
                 path.equals("/member/duplicateNickname") ||
                 path.equals("/member/send-verification-email") ||
+                path.equals("/")||
                 path.equals("/member/verify-email");
     }
     //로그아웃 요청 여부 확인

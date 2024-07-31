@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -112,7 +113,6 @@ public class UserService implements UserDetailsService {
         return false;
     }
     //JWT 로그인 (+ Refresh 토큰)
-    //public Cookie loginWithJwt(String email, String password){
     public LoginResponseDto loginWithJwt(String email, String password){
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         try{
@@ -152,19 +152,7 @@ public class UserService implements UserDetailsService {
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setHttpOnly(true);
         response.addCookie(refreshTokenCookie);
-
-        // 클라이언트에게 Access Token 삭제 지시
-        // (실제 삭제는 클라이언트 측에서 수행)
     }
-    /*public Cookie setLogoutCookie(String email) {
-        //Refresh Token Redis에서 삭제
-        refreshTokenService.deleteRefreshToken(email);
-        //Access Token 무효화
-        Cookie jwtCookie = new Cookie("jwt_token", null);
-        jwtCookie.setMaxAge(0);
-        jwtCookie.setPath("/");
-        return jwtCookie;
-    }*/
 
     // 토큰 갱신 : 새로운 액세스 토큰을 응답 본문에 포함하고 새 리프레시 토큰 생성
     public LoginResponseDto refreshToken(String email, String refreshToken) {
@@ -190,26 +178,10 @@ public class UserService implements UserDetailsService {
             throw new InvalidRefreshTokenException("Invalid refresh token");
         }
     }
-    /*public LoginResponseDto refreshToken(String email, String refreshToken) {
-        String storedRefreshToken = refreshTokenService.getRefreshToken(email);
-        if (storedRefreshToken != null && storedRefreshToken.equals(refreshToken)) {
-            String newAccessToken = jwtUtil.generateAccessToken(email);
-            String newRefreshToken = jwtUtil.generateRefreshToken(email);
-
-            // 새로운 Refresh 토큰을 Redis에 저장
-            refreshTokenService.saveRefreshToken(email, newRefreshToken);
-
-            // 새로운 AccessToken을 쿠키에 저장
-            Cookie jwtCookie = new Cookie("jwt_token", newAccessToken);
-            jwtCookie.setMaxAge(600);
-            jwtCookie.setPath("/");
-            jwtCookie.setHttpOnly(true);
-
-            return LoginResponseDto.builder()
-                    .accessTokenCookie(jwtCookie)
-                    .refreshToken(refreshToken).build();
-        } else {
-            throw new InvalidRefreshTokenException("Invalid refresh token");
-        }
-    }*/
+    //유저 닉네임 찾기
+    public String findUserByEmail(String email){
+    Users user =
+        usersRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
+        return user.getNickname();
+    }
 }

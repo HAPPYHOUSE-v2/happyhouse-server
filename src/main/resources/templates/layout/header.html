@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<th:block th:fragment="header">
+    <header class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <!-- 로고 (왼쪽) -->
+                <a class="navbar-brand" th:href="@{/}">
+                    <img th:src="@{/image/logo.png}" alt="Happy House Logo" class="logo-image" style="height: 40px;">
+                </a>
+                <!-- 토글 버튼 (모바일 뷰) -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- 네비게이션 항목들 (오른쪽) -->
+                <section class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/}">거래정보</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/}">커뮤니티</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/member/mypage}" id="mypageLink" style="display: none;">마이페이지</a>
+                        </li>
+                        <!--이메일, 로그아웃-->
+                        <li id="authSection" class="d-flex align-items-center">
+
+                        </li>
+                    </ul>
+                </section>
+            </div>
+        </nav>
+    </header>
+    <script th:inline="javascript">
+        function checkAuthStatus() {
+            const token = localStorage.getItem('accessToken');
+            console.log('Current access token:', token); // 토큰 존재 여부 확인
+            if(token) {
+                const payload = token.split('.')[1];
+                const decodedPayload = JSON.parse(atob(payload));
+                const expirationDate = new Date(decodedPayload.exp * 1000); // exp는 초 단위로 되어있으므로 밀리초로 변환
+                const currentDate = new Date();
+
+                // 토큰이 만료되었는지 확인
+                if (expirationDate < currentDate) {
+                    localStorage.removeItem('accessToken'); // 만료된 토큰 삭제
+                    showLoginRegisterLinks(); // 로그인/회원가입 링크 표시
+                    return;
+                }
+
+                fetch('/member/check-auth', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+                    },
+                    credentials: 'include'
+                })
+                    .then(response => {
+                        console.log('Auth check 응답 확인:', response.status); // 응답 상태 확인
+                        if (response.ok) {
+                            return response.json();
+                        } else if (response.status === 401) {
+                            throw new Error('Unauthorized');
+                        }
+                        throw new Error('Server error');
+                    })
+                    .then(data => {
+                        console.log('Auth check 응답 데이터:', data); // 응답 데이터 확인
+                        if (data.isLoggedIn) {
+                            document.getElementById('authSection').innerHTML = `
+                                <section>
+                                    <span>${data.nickname}님</span>
+                                    <button class="btn btn-primary ms-2" onclick="logout()">로그아웃</button>
+                                </section>
+                            `;
+                            document.getElementById('mypageLink').style.display = 'inline-block';
+                        } else {
+                            showLoginRegisterLinks();
+                        }
+                    })
+                    .catch(error => {
+                        if (error.message === 'Unauthorized') {
+                            return refreshToken();
+                        }
+                        console.error('인증 상태 확인 중 오류 발생:', error);
+                        showLoginRegisterLinks();
+                    });
+            }else{
+                showLoginRegisterLinks();
+            }
+        }
+        function refreshToken() {
+            fetch('/member/refresh', {
+                method: 'POST',
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        const newAccessToken = response.headers.get('Authorization');
+                        if (newAccessToken && newAccessToken.startsWith('Bearer ')) {
+                            localStorage.setItem('accessToken', newAccessToken.substring(7));
+                            checkAuthStatus(); // 새 토큰으로 다시 인증 상태 확인
+                        }
+                    } else {
+                        throw new Error('Refresh failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('토큰 갱신 중 오류 발생:', error);
+                    localStorage.removeItem('accessToken');
+                    showLoginRegisterLinks();
+                });
+        }
+        function getEmailFromToken(token) {
+            const payload = token.split('.')[1]; // JWT의 두 번째 부분(페이로드) 추출
+            const decodedPayload = JSON.parse(atob(payload)); // Base64 디코딩 후 JSON으로 변환
+            return decodedPayload.email; // 이메일 정보 반환
+        }
+        function logout() { //로그아웃
+            const accessToken = localStorage.getItem('accessToken');
+            if (!accessToken) {
+                console.error('엑세스 토큰을 찾을 수 없습니다.');
+                window.location.reload();
+                return;
+            }
+            const email = getEmailFromToken(accessToken); // 토큰에서 이메일 추출
+
+            fetch('/member/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + accessToken
+                },
+                credentials: 'include',
+                body: JSON.stringify({ email: email }) // 추출한 이메일 정보를 본문에 포함
+            })
+                .then(response => {
+                    if (response.ok) {
+                        localStorage.removeItem('accessToken');
+                        window.location.href = '/'; // 홈 화면으로 이동
+                        //window.location.reload();
+                    } else if (response.status === 401) {
+                        console.error('401 Unauthorized: 토큰이 만료됐거나 유효하지 않음');
+                        //localStorage.removeItem('accessToken');
+                        //window.location.reload();
+                    } else {
+                        throw new Error('Logout failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('로그아웃 중 오류 발생:', error);
+                });
+        }
+
+        function showLoginRegisterLinks() {
+            document.getElementById('authSection').innerHTML = `
+            <a href="/member/login" class="btn btn-outline-primary me-2">로그인</a>
+            <a href="/member/register" class="btn btn-primary">회원가입</a>
+        `;
+            document.getElementById('mypageLink').style.display = 'none';
+        }
+
+        // 페이지 로드 시 인증 상태 확인
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    </script>
+</th:block>
+</html>
