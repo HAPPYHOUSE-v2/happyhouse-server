@@ -14,7 +14,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class PostDto {
 
-    private Long id;
+    private Long postId;
 
     private Long userId;
 
@@ -31,4 +31,33 @@ public class PostDto {
     private boolean deleteYn;
 
     private boolean noticeYn;
+
+
+    public Post toEntity() {
+        Post post = new Post().builder()
+                .userId(this.getUserId())
+                .title(this.getTitle())
+                .content(this.getContent())
+                .viewCount(this.getViewCount())
+                .createdAt(this.getCreatedAt())
+                .updatedAt(this.getUpdatedAt())
+                .deleteYn(this.isDeleteYn())
+                .noticeYn(this.isNoticeYn())
+                .build();
+        return post;
+    }
+
+    public static PostDto fromEntity(Post post) {
+        PostDto postDto = new PostDto();
+        postDto.setPostId(post.getPostId());
+        postDto.setUserId(post.getUserId());
+        postDto.setTitle(post.getTitle());
+        postDto.setContent(post.getContent());
+        postDto.setViewCount(post.getViewCount());
+        postDto.setCreatedAt(post.getCreatedAt());
+        postDto.setUpdatedAt(post.getUpdatedAt());
+        postDto.setDeleteYn(post.isDeleteYn());
+        postDto.setNoticeYn(post.isNoticeYn());
+        return postDto;
+    }
 }
