@@ -38,22 +38,22 @@ public class SpringSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable()) //CSRF 보호 비활성화(JWT 사용)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) //서버 세션 생성 X
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/member/register", "/member/login",
                                 "/member/refresh", "/member/duplicateNickname",
-                                "/member/send-verification-email", "/member/verify-email", "/member/logout").permitAll()
+                                "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
-                        .requestMatchers( "/member/check-auth", "/member/mypage").authenticated()
+                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**").authenticated() //로그인 해야 가능
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, authException) -> {
+                        .authenticationEntryPoint((request, response, authException) -> { //인증 실패 시 401
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
-                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                        .accessDeniedHandler((request, response, accessDeniedException) -> { //접근 거부 시 403
                             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
                         })
                 )
@@ -63,13 +63,13 @@ public class SpringSecurityConfig {
         return http.build();
     }
 
-    @Bean
+    @Bean // CORS 정책 설정
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:8089")); // 프론트엔드 주소
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(true); //쿠키나 인증 헤더를 포함한 요청 허용
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

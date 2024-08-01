@@ -5,6 +5,7 @@ import com.ormi.happyhouse.member.exception.InvalidRefreshTokenException;
 import com.ormi.happyhouse.member.exception.LoginException;
 import com.ormi.happyhouse.member.exception.UserRegistrationException;
 import com.ormi.happyhouse.member.jwt.JwtUtil;
+import com.ormi.happyhouse.member.service.EmailService;
 import com.ormi.happyhouse.member.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -32,6 +33,7 @@ public class UserController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final EmailService emailService;
 
     //회원가입 페이지 이동
     @GetMapping("/register")
@@ -62,15 +64,16 @@ public class UserController {
         boolean isDuplicated = userService.isDuplicatedNickname(nickname);
         return isDuplicated ? ResponseEntity.status(HttpStatus.CONFLICT).body(false) : ResponseEntity.ok(isDuplicated);
     }
+    //이메일 인증
     @CrossOrigin(origins = "*")
     @ResponseBody
     @PostMapping("/send-verification-email")
     public ResponseEntity<String> sendVerificationEmail(@RequestParam("email") String email) {
         log.info("send-verification-email :{}", email);
-        userService.sendVerificationEmail(email);
+        emailService.sendVerificationEmail(email);
         return ResponseEntity.ok("인증 이메일이 전송되었습니다.");
     }
-
+    //이메일 인증(회원가입 시)
     @ResponseBody
     @PostMapping("/verify-email")
     public ResponseEntity<String> verifyEmail(@RequestBody Map<String, String> mailCode) {
@@ -78,7 +81,7 @@ public class UserController {
         String code = mailCode.get("code");
         log.info("인증 이메일 :{}", email);
         log.info("인증 코드 :{}", code);
-        boolean isVerified = userService.verifyEmailCode(email, code);
+        boolean isVerified = emailService.verifyEmailCode(email, code);
         if (isVerified) {
             return ResponseEntity.ok("이메일이 성공적으로 인증되었습니다.");
         } else {
@@ -129,6 +132,7 @@ public class UserController {
     @PostMapping("/refresh") //새로운 액세스 토큰을 응답 본문에 포함하고 새 리프레시 토큰 생성
     public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token", required = false) String refreshToken,
                                           HttpServletResponse response) {
+        log.info("/refresh 요청 :{}", refreshToken);
         if (refreshToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Refresh token is missing");
         }
@@ -154,7 +158,7 @@ public class UserController {
                 if (jwtUtil.validateToken(token)) {
                     String email = jwtUtil.getEmailFromToken(token);
                     log.info("토큰에서 메일 추출 :{}", email);
-                    String nickname = userService.findUserByEmail(email);
+                    String nickname = userService.findNicknameByEmail(email);
                     return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email, "nickname", nickname));
                 }
             } catch (ExpiredJwtException e) {
@@ -169,10 +173,19 @@ public class UserController {
         return ResponseEntity.ok(Map.of("isLoggedIn", false));
     }
 
-    //마이페이지 이동
-    @GetMapping("/mypage")
-    public String showMypage(Model model){
-        //model.addAttribute("user", new UserDto());
-        return "users/mypage";
+    //비밀번호 찾기 - 임시 비밀번호 생성
+    @PostMapping("/temppassword")
+    public ResponseEntity<?> createTempPassword(@RequestBody ResetPwReqeust resetPwReq) {
+        log.info("/temppassword");
+        String email = resetPwReq.getEmail();
+        try {
+            String tempPassword = userService.resetPassword(email);
+            emailService.sendResetPassword(email, tempPassword);
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
+
+
 }

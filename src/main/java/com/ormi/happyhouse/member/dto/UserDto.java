@@ -1,5 +1,6 @@
 package com.ormi.happyhouse.member.dto;
 
+import com.ormi.happyhouse.member.domain.Users;
 import lombok.*;
 
 @Getter
@@ -20,4 +21,11 @@ public class UserDto {
    public static UserDto of(String email, String password, String nickname) {
         return new UserDto(email, password, nickname);
     }*/
+    // Users 엔티티를 UserDto로 변환하는 정적 메소드
+    public static UserDto fromEntity(Users user) {
+        return UserDto.builder()
+                .email(user.getEmail())
+                .nickname(user.getNickname())
+                .build();
+    }
 }

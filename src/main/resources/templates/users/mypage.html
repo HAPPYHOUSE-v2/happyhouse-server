@@ -9,8 +9,28 @@
 <body>
 <!-- 헤더 포함 -->
 <header th:replace="~{layout/header :: header}"></header>
-<main>
-    <h1>마이페이지</h1>
+<main class="container mt-4">
+    <h1 class="mb-4">마이페이지</h1>
+    <!--메뉴-->
+    <nav class="nav nav-tabs mb-4">
+        <a class="nav-link" th:classappend="${selectedMenu == 'profile'} ? 'active'" th:href="@{/mypage(menu='profile')}">개인정보 수정</a>
+        <a class="nav-link" th:classappend="${selectedMenu == 'myposts'} ? 'active'" th:href="@{/mypage(menu='myposts')}">내가 작성한 글</a>
+        <a class="nav-link" th:classappend="${selectedMenu == 'liked'} ? 'active'" th:href="@{/mypage(menu='liked')}">즐겨찾기</a>
+        <a class="nav-link" th:classappend="${selectedMenu == 'deleteaccount'} ? 'active'" th:href="@{/mypage(menu='deleteaccount')}">회원 탈퇴</a>
+    </nav>
+    <!--메뉴에 따른 콘텐츠-->
+    <section th:if="${selectedMenu == 'profile'}">
+        <section th:replace="~{mypage/profile :: profile}"></section>
+    </section>
+    <section th:if="${selectedMenu == 'myposts'}">
+        <section th:replace="~{mypage/myposts :: myposts}"></section>
+    </section>
+    <div th:if="${selectedMenu == 'liked'}">
+        <!--<div th:insert="~{mypage/liked :: liked}"></div>-->
+    </div>
+    <div th:if="${selectedMenu == 'deleteaccount'}">
+    </div>
 </main>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

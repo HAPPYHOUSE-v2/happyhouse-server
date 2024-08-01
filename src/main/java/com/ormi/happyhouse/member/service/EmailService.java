@@ -23,7 +23,7 @@ public class EmailService {
     //private final RedisTemplate<String, String> redisTemplate;
     private final @Qualifier("stringRedisTemplate") StringRedisTemplate redisTemplate;
 
-
+    //이메일 인증 코드 전송
     public void sendVerificationEmail(String recipient) {
         String emailCode = generateEmailCode();
         SimpleMailMessage message = new SimpleMailMessage();
@@ -50,9 +50,25 @@ public class EmailService {
         }
         return sb.toString();
     }
-
+    //이메일 인증코드 검증
     public boolean verifyEmailCode(String email, String code) {
-        String storedCode = redisTemplate.opsForValue().get(email);
-        return storedCode != null && storedCode.equals(code);
+        String storedCode = redisTemplate.opsForValue().get("EMAIL_CODE:" + email);
+        log.info("저장되어 있는 이메일과 인증코드 {}: {}", email, storedCode);
+        log.info("받은 인증코드 : {}", code);
+        if (storedCode != null && storedCode.equals(code)) {
+            // 인증 성공 시 이메일 인증 상태를 Redis에 저장
+            redisTemplate.opsForValue().set("EMAIL_VERIFIED:" + email, "true", 30, TimeUnit.MINUTES);
+            return true;
+        }
+        return false;
+    }
+
+    //임시 비밀번호 전송
+    public void sendResetPassword(String to, String tempPassword) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("비밀번호 초기화");
+        message.setText("임시 비밀번호: " + tempPassword + "\n로그인 후 비밀번호를 변경해주세요.");
+        javaMailSender.send(message);
     }
 }

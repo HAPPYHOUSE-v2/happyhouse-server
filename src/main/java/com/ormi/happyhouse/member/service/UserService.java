@@ -1,6 +1,7 @@
 package com.ormi.happyhouse.member.service;
 
 import com.ormi.happyhouse.member.dto.LoginResponseDto;
+import com.ormi.happyhouse.member.dto.ModifyUserInfoRequest;
 import com.ormi.happyhouse.member.exception.InvalidRefreshTokenException;
 import com.ormi.happyhouse.member.jwt.JwtUtil;
 import com.ormi.happyhouse.member.domain.Provider;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 //Spring Security에서 사용자 정보를 가져오는 인터페이스
@@ -95,23 +97,6 @@ public class UserService implements UserDetailsService {
               .roles("USER")
               .build();
     }
-    // 이메일 인증 코드 전송
-    public void sendVerificationEmail(String email) {
-        emailService.sendVerificationEmail(email);
-    }
-
-    // 이메일 인증 코드 확인
-    public boolean verifyEmailCode(String email, String code) {
-        String storedCode = redisTemplate.opsForValue().get("EMAIL_CODE:" + email);
-        log.info("저장되어 있는 이메일과 인증코드 {}: {}", email, storedCode);
-        log.info("받은 인증코드 : {}", code);
-        if (storedCode != null && storedCode.equals(code)) {
-            // 인증 성공 시 이메일 인증 상태를 Redis에 저장
-            redisTemplate.opsForValue().set("EMAIL_VERIFIED:" + email, "true", 30, TimeUnit.MINUTES);
-            return true;
-        }
-        return false;
-    }
     //JWT 로그인 (+ Refresh 토큰)
     public LoginResponseDto loginWithJwt(String email, String password){
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -179,9 +164,59 @@ public class UserService implements UserDetailsService {
         }
     }
     //유저 닉네임 찾기
-    public String findUserByEmail(String email){
+    public String findNicknameByEmail(String email){
     Users user =
         usersRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User Not Found"));
         return user.getNickname();
+    }
+    //마이페이지 - 개인정보 수정
+    @Transactional
+    public UserDto modifyUserInfo(String email, ModifyUserInfoRequest modifyUserInfoReq) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        Users existingUser = usersRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        // 새 비밀번호가 제공된 경우에만 수정
+        String newPassword = modifyUserInfoReq.getNewPassword();
+        if (newPassword != null && !newPassword.isEmpty()) {
+            // 비밀번호 암호화
+            newPassword = passwordEncoder.encode(newPassword);
+        } else {
+            // 새 비밀번호가 제공되지 않았다면 기존 비밀번호 유지
+            newPassword = existingUser.getPassword();
+        }
+
+        // 새 닉네임이 제공된 경우에만 수정
+        String newNickname = modifyUserInfoReq.getNickname();
+        if (newNickname == null || newNickname.isEmpty()) {
+            newNickname = existingUser.getNickname();
+        }
+
+        existingUser.updateUserInfo(newPassword, newNickname);
+        Users updatedUser = usersRepository.save(existingUser);
+        return UserDto.fromEntity(updatedUser);
+    }
+    //비밀번호 초기화
+    public String resetPassword(String email) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        Users existingUsers = usersRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        String tempPassword = generateTempPasswword();
+        existingUsers.resetPassword(passwordEncoder.encode(tempPassword));
+        usersRepository.save(existingUsers);
+        return tempPassword;
+    }
+
+    public String generateTempPasswword() {
+        int codeLength = 8;  // 코드자리 6자리로 설정
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+        StringBuilder sb = new StringBuilder(codeLength);
+        Random random = new Random();
+
+        for (int i = 0; i < codeLength; i++) {
+            int index = random.nextInt(chars.length());
+            char randomChar = chars.charAt(index);
+            sb.append(randomChar);
+        }
+        return sb.toString();
     }
 }

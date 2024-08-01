@@ -67,7 +67,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.equals("/member/duplicateNickname") ||
                 path.equals("/member/send-verification-email") ||
                 path.equals("/")||
-                path.equals("/member/verify-email");
+                path.equals("/member/verify-email") ||
+                path.equals("/member/temppassword");
     }
     //로그아웃 요청 여부 확인
     private boolean isLogoutRequest(HttpServletRequest request) {
