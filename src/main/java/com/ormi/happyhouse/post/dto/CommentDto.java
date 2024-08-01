@@ -28,15 +28,15 @@ public class CommentDto {
 
     private boolean deleteYn;
 
-    public Comment toEntity(){
-        return new Comment().builder()
-                .post(this.post)
-                .users(this.users)
-                .content(this.content)
-                .createdAt(this.createdAt)
-                .deleteYn(this.deleteYn)
-                .build();
-    }
+//    public Comment toEntity(){
+//        return new Comment().builder()
+//                .post(this.post)
+//                .users(this.users)
+//                .content(this.content)
+//                .createdAt(this.createdAt)
+//                .deleteYn(this.deleteYn)
+//                .build();
+//    }
 
     public static CommentDto fromEntity(Comment comment){
         CommentDto commentDto = new CommentDto();

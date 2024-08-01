@@ -10,12 +10,15 @@ import org.springframework.data.web.SortDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Controller
 @RequestMapping("/post")
 public class PostController {
 
-    private PostService postService;
+    private final PostService postService;
 
     public PostController(PostService postService) {
         this.postService = postService;
@@ -23,8 +26,8 @@ public class PostController {
 
     // Create: 게시글 생성
     @PostMapping
-    public String savePost(@ModelAttribute PostDto postDto, Model model) {
-        postService.savePost(postDto);
+    public String savePost(@ModelAttribute PostDto postDto, @RequestParam("file") MultipartFile file) throws IOException {
+        postService.savePost(postDto, file);
         return "redirect:/post";
     }
 
@@ -62,6 +65,7 @@ public class PostController {
         PostDto post = postService.showPostDetail(postId);
         model.addAttribute("post", post);
         model.addAttribute("comments", post.getComments());
+        model.addAttribute("files", post.getFiles());
         return "post/detail";
     }
 

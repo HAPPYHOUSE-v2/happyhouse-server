@@ -1,23 +1,17 @@
 package com.ormi.happyhouse.post.controller;
 
-import com.ormi.happyhouse.post.domain.Comment;
 import com.ormi.happyhouse.post.dto.CommentDto;
 import com.ormi.happyhouse.post.service.CommentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/comment")
+@RequiredArgsConstructor
 public class CommentController {
 
     private final CommentService commentService;
-
-    @Autowired
-    public CommentController(CommentService commentService) {
-        this.commentService = commentService;
-    }
 
     // Create: 댓글 생성
     @PostMapping("/{post_id}")
@@ -32,7 +26,7 @@ public class CommentController {
 
     // Delete: 댓글 삭제
     @PutMapping("/delete/{comment_id}")
-    public String deleteComment(@PathVariable("comment_id") Long commentId, Model model) {
+    public String deleteComment(@PathVariable("comment_id") Long commentId) {
         CommentDto deletedComment = commentService.deleteComment(commentId);
         return "redirect:/post/" + deletedComment.getPost().getPostId();
     }

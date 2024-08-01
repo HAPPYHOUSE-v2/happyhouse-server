@@ -38,8 +38,16 @@
         </form>
     </div>
 
+    <!-- 첨부파일 -->
+    <div th:each="file : ${files}" class="file">
+        <span>첨부파일: </span>
+    <a th:href="${file.fileUrl}" th:text="${file.fileName}"></a>
+    </div>
+
+    <!-- 게시글 내용 -->
     <div class="content">
-        <p th:text="${post.content}"></p>
+
+        <div th:utext="${#strings.replace(post.content, '\n', '<br/>')}"></div>
     </div>
 </article>
 

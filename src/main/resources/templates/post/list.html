@@ -50,7 +50,7 @@
         <td >
             <a th:text="${post.title}" th:href="@{/post/{post_id}(post_id = ${post.postId})}"></a>
         </td>
-        <td th:text="${post.userId}"></td>
+        <td th:text="${post.user.nickname}"></td>
         <td th:text="${#dates.format(post.createdAt, 'yyyy.MM.dd')}"></td>
     </tr>
     </tbody>
