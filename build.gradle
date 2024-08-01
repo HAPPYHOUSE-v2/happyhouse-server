@@ -35,6 +35,21 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    //jwt
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    testImplementation 'org.projectlombok:lombok:1.18.28'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+    //redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    //메일 발송
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    //타임리프 레이아웃
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+    //부트스트랩
+    implementation 'org.webjars:bootstrap:5.3.3'
+    //자동실행
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
 
 tasks.named('test') {

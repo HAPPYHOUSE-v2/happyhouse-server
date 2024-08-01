@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1">
+    <title>로그인</title>
+    <link rel="shortcut icon" href="#">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<!-- 헤더 포함 -->
+<header th:replace="~{layout/header :: header}"></header>
+<main class="container">
+    <section class="row justify-content-center mt-5">
+        <section class="col-md-6">
+            <section class="card shadow">
+                <section class="card-body">
+                    <h2 class="card-title text-center mb-4">로그인</h2>
+                    <section class="text-center mb-4">
+                        <span class="d-block text-dark fw-bold mb-1">해피하우스에 오신 것을 환영합니다.</span>
+                        <span class="d-block text-muted">해피하우스는 주택 거래 커뮤니티입니다.</span>
+                    </section>
+                    <form id="loginForm">
+                        <section class="mb-3">
+                            <label for="email" class="form-label">이메일:</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </section>
+                        <section class="mb-3">
+                            <label for="password" class="form-label">비밀번호:</label>
+                            <input type="password" class="form-control" id="password" name="password" required>
+                        </section>
+                        <section class="d-grid">
+                            <button type="submit" class="btn btn-primary">로그인</button>
+                        </section>
+                    </form>
+                    <section id="errorMessage" class="text-danger mt-2"></section>
+                    <section class="mt-3 text-center">
+                        <p>비밀번호를 잊으셨나요? <a href="#" onclick="resetPassword(); return false;" class="text-decoration-none">비밀번호 초기화</a></p>
+                        <p>아직 계정이 없으신가요? <a th:href="@{/member/register}" class="text-decoration-none">회원가입</a></p>
+                    </section>
+                </section>
+            </section>
+        </section>
+    </section>
+</main>
+<script>
+    //비밀번호 초기화(임시 비밀번호 전송)
+    function resetPassword() {
+        const email = document.getElementById('email').value;
+        if (!email) {
+            alert('이메일 주소를 입력해주세요.');
+            return;
+        }
+        fetch('/member/temppassword', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: email })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('임시 비밀번호가 이메일로 전송되었습니다. 이메일을 확인해주세요.');
+                } else {
+                    alert('비밀번호 초기화에 실패했습니다. ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            });
+    }
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        fetch('/member/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            }),
+            credentials: 'include' // 쿠키를 포함하기 위해 필요
+        })
+            .then(response => {
+                const accessToken = response.headers.get('Authorization');
+                if (accessToken && accessToken.startsWith('Bearer ')) {
+                    localStorage.setItem('accessToken', accessToken.substring(7));
+                }
+                // 응답 상태와 함께 JSON 데이터를 반환
+                return response.json().then(data => ({
+                    status: response.status,
+                    data: data
+                }));
+            })
+            .then(result => {
+                if (result.status === 200) {
+                    console.log('Login successful', result.data);
+                    window.location.href = '/';
+                } else {
+                    // 에러 메시지 처리
+                    throw result;
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                let errorMessage = '로그인 실패: '+error.data.error;
+                document.getElementById('errorMessage').textContent = errorMessage;
+            });
+    });
+    // 액세스 토큰을 사용하여 인증된 요청을 보내는 함수
+    function sendAuthenticatedRequest(url, method, body) {
+        const accessToken = localStorage.getItem('accessToken');
+        return fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(body),
+            credentials: 'include'
+        }).then(response => {
+            if (response.status === 401) {
+                // 액세스 토큰이 만료된 경우, 리프레시 토큰으로 갱신
+                return refreshAccessToken().then(() => {
+                    // 새 액세스 토큰으로 원래 요청 재시도
+                    return sendAuthenticatedRequest(url, method, body);
+                });
+            }
+            return response.json();
+        });
+    }
+    // 액세스 토큰 갱신 함수
+    function refreshAccessToken() {
+        return fetch('/member/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        }).then(response => {
+            if (response.ok) {
+                const newAccessToken = response.headers.get('Authorization');
+                if (newAccessToken && newAccessToken.startsWith('Bearer ')) {
+                    localStorage.setItem('accessToken', newAccessToken.substring(7));
+                }
+            } else {
+                throw new Error('Token refresh failed');
+            }
+        });
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

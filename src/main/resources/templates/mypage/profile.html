@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<th:block th:fragment="profile">
+    <section class="container mt-4">
+        <section class="row justify-content-center">
+            <section class="col-md-6">
+                <section class="card shadow">
+                    <section class="card-body">
+                        <h2 class="card-title text-center mb-4">개인정보 수정</h2>
+                        <form th:action="@{/mypage/update}" method="post" class="needs-validation" novalidate>
+                            <section class="mb-3">
+                                <label for="nickname" class="form-label">닉네임</label>
+                                <input type="text" class="form-control" id="nickname" name="nickname" required>
+                                <button type="button" class="btn btn-outline-secondary mt-2" onclick="checkNickname()">닉네임 중복 확인</button>
+                                <span id="nicknameResult" class="form-text"></span>
+                                <div class="invalid-feedback">
+                                    닉네임을 입력해주세요.
+                                </div>
+                            </section>
+                            <section class="mb-3">
+                                <label for="newPassword" class="form-label">새 비밀번호</label>
+                                <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                                <section class="invalid-feedback">
+                                    새 비밀번호를 입력해주세요.
+                                </section>
+                            </section>
+                            <section class="mb-3">
+                                <label for="confirmPassword" class="form-label">새 비밀번호 확인</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                                <section class="invalid-feedback">
+                                    새 비밀번호를 다시 입력해주세요.
+                                </section>
+                            </section>
+                            <section class="text-center">
+                                <button type="submit" class="btn btn-primary">수정하기</button>
+                            </section>
+                        </form>
+                    </section>
+                </section>
+            </section>
+        </section>
+    </section>
+    <script>
+        let isNicknameAvailable = false;
+        let originalNickname = '';
+        //닉네임 중복 확인
+        function checkNickname() {
+            var nickname = document.getElementById('nickname').value;
+            var resultSpan = document.getElementById('nicknameResult');
+            // 기존 닉네임과 같은 경우
+            if (nickname === originalNickname) {
+                resultSpan.textContent = '현재 사용 중인 닉네임입니다.';
+                resultSpan.style.color = 'blue';
+                isNicknameAvailable = true;
+                return;
+            }
+            fetch(`/member/duplicateNickname?nickname=${encodeURIComponent(nickname)}`)
+                .then(response => {
+                    if (response.ok) {
+                        resultSpan.textContent = '사용 가능한 닉네임입니다.';
+                        resultSpan.style.color = 'green';
+                        isNicknameAvailable = true;
+                    } else if (response.status === 409) {
+                        resultSpan.textContent = '이미 사용 중인 닉네임입니다.';
+                        resultSpan.style.color = 'red';
+                        isNicknameAvailable = false;
+                    } else {
+                        throw new Error('닉네임 확인 중 오류가 발생했습니다.');
+                    }
+                })
+                .catch(error => {
+                    resultSpan.textContent = error.message;
+                    resultSpan.style.color = 'red';
+                    isNicknameAvailable = false;
+                    console.error('Error:', error);
+                });
+        }
+        //새 비밀번호 검증
+        function validateForm(event){
+            event.preventDefault();
+            let isValid = true;
+            //const nickname = document.getElementById('nickname');
+            const newPassword = document.getElementById('newPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            // 닉네임 중복 확인 검증
+            if (!isNicknameAvailable) {
+                alert('닉네임 중복 확인을 해주세요.');
+                isValid = false;
+            }
+            //비밀번호 검증
+            if (newPassword.value.trim() === '') {
+                newPassword.classList.add('is-invalid');
+                newPassword.nextElementSibling.textContent = '새 비밀번호를 입력해주세요.';
+                isValid = false;
+            } else if (newPassword.value !== confirmPassword.value) {
+                newPassword.classList.add('is-invalid');
+                confirmPassword.classList.add('is-invalid');
+                confirmPassword.nextElementSibling.textContent = '새 비밀번호가 일치하지 않습니다.';
+                isValid = false;
+            } else {
+                newPassword.classList.remove('is-invalid');
+                confirmPassword.classList.remove('is-invalid');
+            }
+            if (isValid) {
+                updateUserInfo();
+            }
+        }
+        //수정 요청
+        function updateUserInfo() {
+            const accessToken = localStorage.getItem('accessToken');
+            const nickname = document.getElementById('nickname').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            fetch('/mypage/modifyInfo', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nickname: nickname,
+                    newPassword: newPassword
+                })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('개인정보가 성공적으로 수정되었습니다.');
+                    location.reload();
+                    //getData(); // 업데이트된 정보를 다시 불러옵니다.
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('개인정보 수정에 실패했습니다.');
+                });
+        }
+        //데이터 조회
+        function getData(){
+            const accessToken = localStorage.getItem('accessToken');
+            //console.log("개인정보 수정 페이지 로드", accessToken);
+            fetch('/mypage/userinfo', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    document.getElementById('nickname').value = data.nickname;
+                    originalNickname = data.nickname;
+                })
+                .catch(error => console.log("error :", error));
+        }
+        // 페이지 로드 시 초기 컨텐츠 로드
+        document.addEventListener('DOMContentLoaded', () => {
+            getData();
+            //수정하기 버튼 누를 때 검증 후 수정 요청
+            document.querySelector('form').addEventListener('submit', validateForm);
+        });
+    </script>
+</th:block>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</html>
