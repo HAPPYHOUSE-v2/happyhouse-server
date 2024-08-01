@@ -61,7 +61,7 @@ public class PostController {
     public String showPostDetail(@PathVariable("post_id") Long postId, Model model) {
         PostDto post = postService.showPostDetail(postId);
         model.addAttribute("post", post);
-//        model.addAttribute("comments", post.getComments());
+        model.addAttribute("comments", post.getComments());
         return "post/detail";
     }
 
