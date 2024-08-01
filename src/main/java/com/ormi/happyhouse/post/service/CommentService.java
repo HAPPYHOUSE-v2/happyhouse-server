@@ -1,7 +1,7 @@
 package com.ormi.happyhouse.post.service;
 
 import com.ormi.happyhouse.member.domain.Users;
-import com.ormi.happyhouse.member.repository.UserRepository;
+
 import com.ormi.happyhouse.post.domain.Comment;
 import com.ormi.happyhouse.post.domain.Post;
 import com.ormi.happyhouse.post.dto.CommentDto;
@@ -18,16 +18,16 @@ public class CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
-    private final UserRepository userRepository;
+    //private final UserRepository userRepository;
     @Autowired
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository, UserRepository userRepository) {
+    public CommentService(CommentRepository commentRepository, PostRepository postRepository) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
-        this.userRepository = userRepository;
+        //this.userRepository = userRepository;
     }
 
     // Create: 댓글 생성 메서드
-    public void saveComment(Long postId, Long userId, String content) {
+    /*public void saveComment(Long postId, Long userId, String content) {
         Optional<Post> postRepositoryById = postRepository.findById(postId);
         Post post = postRepositoryById.orElseThrow(() -> new RuntimeException("Post not found"));
         Optional<Users> userRepositoryById = userRepository.findById(userId);
@@ -39,8 +39,8 @@ public class CommentService {
                 .createdAt(new Date())
                 .build();
         commentRepository.save(comment);
-    }
-
+    }*/
+/*
     // Delete: 댓글 삭제 메서드
     public CommentDto deleteComment(Long commentId) {
         Optional<Comment> commentById = commentRepository.findById(commentId);
@@ -55,5 +55,5 @@ public class CommentService {
                 .build();
         commentRepository.save(deletedComment);
         return CommentDto.fromEntity(deletedComment);
-    }
+    }*/
 }

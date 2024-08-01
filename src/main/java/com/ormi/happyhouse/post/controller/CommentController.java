@@ -26,14 +26,14 @@ public class CommentController {
             @RequestParam("user_id") Long user_id,
             @RequestParam("content") String content
     ) {
-        commentService.saveComment(post_id, user_id, content);
+        //commentService.saveComment(post_id, user_id, content);
         return "redirect:/post/" + post_id;
     }
 
     // Delete: 댓글 삭제
-    @PutMapping("/delete/{comment_id}")
+   /* @PutMapping("/delete/{comment_id}")
     public String deleteComment(@PathVariable("comment_id") Long commentId, Model model) {
         CommentDto deletedComment = commentService.deleteComment(commentId);
         return "redirect:/post/" + deletedComment.getPost().getPostId();
-    }
+    }*/
 }
