@@ -2,9 +2,69 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <title>게시글 작성</title>
 </head>
 <body>
+<!-- 네비게이션 -->
+<nav class="nav">
+    <a>home</a>
+    <div>
+        <a>거래정보</a>
+        <a>커뮤니티</a>
+        <a>마이페이지</a>
+        <a>로그인설정</a>
+    </div>
+</nav>
 
+<!-- 새로운 게시글 작성 -->
+<article class="write" th:unless="${isEdit}">
+    <form th:action="@{/post}" method="post" enctype="multipart/form-data">
+        <!-- 게시글 작성하는 유저의 값이 필요 -->
+        <input type="hidden" name="userId" value=51 />
+
+
+        <div class="title">
+            <label for="newTitle"></label>
+            <input type="text" id="newTitle" name="title" class="title-box">
+            <label for="newNotice"> 공지글 </label>
+            <input type="checkbox" id="newNotice" name="noticeYn">
+        </div>
+
+        <div class="content">
+            <label for="newContent" ></label>
+            <textarea id="newContent" name="content"></textarea>
+        </div>
+
+        <label for="file">Select file to upload:</label>
+        <input type="file" id="file" name="file" accept="image/*" required>
+        <p th:if="${message}" th:text="${message}"></p>
+
+        <a th:href="@{/post}"> 작성취소 </a>
+        <button type="submit"> 작성완료 </button>
+    </form>
+</article>
+
+<!-- 수정시 작성페이지 -->
+<article class="write" th:if="${isEdit}">
+    <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="post">
+        <input type="hidden" name="_method" value="put">
+
+        <div class="title">
+            <label for="title"></label>
+            <input type="text" id="title" name="title" th:value="${post.title}" class="title-box">
+            <label for="notice"> 공지글 </label>
+            <input type="checkbox" id="notice" name="noticeYn" th:checked="${post.noticeYn}">
+        </div>
+
+        <div class="content">
+            <label for="content" ></label>
+            <textarea id="content" name="content" th:text="${post.content}"></textarea>
+        </div>
+
+        <a th:href="@{/post/{post_id}(post_id = ${post.postId})}"> 수정취소 </a>
+        <button type="submit"> 수정 </button>
+    </form>
+</article>
 </body>
 </html>

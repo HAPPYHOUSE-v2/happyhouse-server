@@ -2,9 +2,71 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <title>게시글</title>
 </head>
 <body>
+<!-- 네비게이션 -->
+<nav class="nav">
+    <a>home</a>
+    <div>
+        <a>거래정보</a>
+        <a>커뮤니티</a>
+        <a>마이페이지</a>
+        <a>로그인설정</a>
+    </div>
+</nav>
+
+<header>
+    <a th:href="@{/post}">
+        <h1>커뮤니티</h1>
+    </a>
+</header>
+
+<!-- 게시글 상세 -->
+<article>
+    <div class="title">
+        <h2 th:text="${post.title}"></h2>
+        <strong th:text="${post.userId}"></strong>
+        <span th:text="${#dates.format(post.createdAt, 'yyyy.MM.dd')}"></span>
+        <span th:text="${post.viewCount}"></span>
+        <a th:href="@{/post/edit/{post_id}(post_id = ${post.postId})}"> 수정 </a>
+        <span> | </span>
+        <form th:action="@{/post/delete/{post_id}(post_id = ${post.postId})}" method="post">
+            <input type="hidden" name="_method" value="put">
+            <button type="submit"> 삭제 </button>
+        </form>
+    </div>
+
+    <div class="content">
+        <p th:text="${post.content}"></p>
+    </div>
+</article>
+
+<!-- 댓글 -->
+<article>
+    <!-- 댓글 작성 -->
+    <div>
+        <form th:action="@{/comment/{post_id}(post_id = ${post.postId})}" method="post">
+            <input type="hidden" name="user_id" value=20 />
+
+            <label for="comment">댓글</label>
+            <input type="text" id="comment" name="content"/>
+            <button type="submit"> 댓글 등록 </button>
+        </form>
+    </div>
+
+    <!-- 댓글 조회 -->
+    <div th:each="comment : ${comments}" th:unless="${comment.deleteYn}">
+        <p th:text="${comment.getUsers().nickname}"></p>
+        <span th:text="${comment.content}"></span>
+        <span th:text="${comment.createdAt}"></span>
+        <form th:action="@{/comment/delete/{comment_id}(comment_id = ${comment.commentId})}" method="post">
+            <input type="hidden" name="_method" value="put">
+            <button> 삭제 </button>
+        </form>
+    </div>
+</article>
 
 </body>
 </html>
