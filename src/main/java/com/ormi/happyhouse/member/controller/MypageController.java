@@ -27,19 +27,6 @@ public class MypageController {
     @GetMapping
     public String showMypage(@RequestParam(name="menu", defaultValue = "profile") String menu, Model model) {
         model.addAttribute("selectedMenu", menu);
-        /*switch (menu) {
-            case "profile":
-                break;
-            case "myposts":
-                // model.addAttribute("myPosts", userService.getMyPosts());
-                break;
-            case "liked":
-                // model.addAttribute("likedPosts", userService.getLikedPosts());
-                break;
-            case "deleteaccount":
-                // 회원 탈퇴 관련 로직
-                break;
-        }*/
         return "users/mypage";
     }
 
@@ -74,8 +61,6 @@ public class MypageController {
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
         }
-
     }
-
 
 }

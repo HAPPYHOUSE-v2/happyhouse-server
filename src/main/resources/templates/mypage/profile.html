@@ -145,7 +145,7 @@
         //데이터 조회
         function getData(){
             const accessToken = localStorage.getItem('accessToken');
-            console.log("개인정보 수정 페이지 로드", accessToken);
+            //console.log("개인정보 수정 페이지 로드", accessToken);
             fetch('/mypage/userinfo', {
                 method: 'GET',
                 headers: {

@@ -3,6 +3,7 @@ package com.ormi.happyhouse.member.service;
 import com.ormi.happyhouse.member.dto.LoginResponseDto;
 import com.ormi.happyhouse.member.dto.ModifyUserInfoRequest;
 import com.ormi.happyhouse.member.exception.InvalidRefreshTokenException;
+import com.ormi.happyhouse.member.exception.WithdrawnUserException;
 import com.ormi.happyhouse.member.jwt.JwtUtil;
 import com.ormi.happyhouse.member.domain.Provider;
 import com.ormi.happyhouse.member.domain.UserRole;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -51,10 +53,22 @@ public class UserService implements UserDetailsService {
         if (!StringUtils.hasText(userDto.getEmail())) {
             throw new UserRegistrationException("이메일은 필수 입력 항목입니다.");
         }
-        // 이메일 중복 체크
+        /*// 이메일 중복 체크
         if (usersRepository.existsByEmail(userDto.getEmail())) {
             throw new UserRegistrationException("이미 사용 중인 이메일입니다.");
+        }*/
+
+        // 이메일 중복 체크 및 탈퇴 사용자 확인
+        Optional<Users> existingUser = usersRepository.findByEmail(userDto.getEmail());
+        if (existingUser.isPresent()) {
+            Users user = existingUser.get();
+            if (user.getStatus() == 2) {
+                throw new UserRegistrationException("탈퇴한 사용자입니다.");
+            } else {
+                throw new UserRegistrationException("이미 사용 중인 이메일입니다.");
+            }
         }
+
         // 이메일 인증 상태 확인
         Boolean isVerified = redisTemplate.opsForValue().get("EMAIL_VERIFIED:" + userDto.getEmail()) != null;
         if (!isVerified) {
@@ -101,6 +115,11 @@ public class UserService implements UserDetailsService {
     public LoginResponseDto loginWithJwt(String email, String password){
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         try{
+            Users user = usersRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다: " + email));
+            if(user.getStatus()==2){
+                throw new WithdrawnUserException("탈퇴한 사용자입니다.");
+            }
             UserDetails userDetails = loadUserByUsername(email);
             if(passwordEncoder.matches(password, userDetails.getPassword())){
                 String accessToken = jwtUtil.generateAccessToken(email);
@@ -218,5 +237,36 @@ public class UserService implements UserDetailsService {
             sb.append(randomChar);
         }
         return sb.toString();
+    }
+    //회원 탈퇴 : 상태(status) ->2
+    @Transactional
+    public boolean withDrawalUser(String email, String password, HttpServletResponse response) {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        try{
+            Users existingUser = usersRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+            if (passwordEncoder.matches(password, existingUser.getPassword())) {
+                existingUser.withDrawalUser(); //상태 0 -> 2
+                usersRepository.save(existingUser);
+                // Refresh Token Redis에서 삭제
+                refreshTokenService.deleteRefreshToken(email);
+
+                // Refresh Token 쿠키 삭제
+                Cookie refreshTokenCookie = new Cookie("refresh_token", null);
+                refreshTokenCookie.setMaxAge(0);
+                refreshTokenCookie.setPath("/");
+                refreshTokenCookie.setHttpOnly(true);
+                response.addCookie(refreshTokenCookie);
+                return true;
+            }else {
+                throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+            }
+        }catch (UsernameNotFoundException unfe) {
+            log.error("회원 탈퇴 중 사용자를 찾을 수 없음: {}", email);
+            throw unfe;
+        } catch (Exception e) {
+            log.error("회원 탈퇴 중 예외 발생", e);
+            throw new RuntimeException("회원 탈퇴 처리 중 오류가 발생했습니다.", e);
+        }
     }
 }

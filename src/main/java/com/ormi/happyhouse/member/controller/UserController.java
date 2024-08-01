@@ -4,6 +4,7 @@ import com.ormi.happyhouse.member.dto.*;
 import com.ormi.happyhouse.member.exception.InvalidRefreshTokenException;
 import com.ormi.happyhouse.member.exception.LoginException;
 import com.ormi.happyhouse.member.exception.UserRegistrationException;
+import com.ormi.happyhouse.member.exception.WithdrawnUserException;
 import com.ormi.happyhouse.member.jwt.JwtUtil;
 import com.ormi.happyhouse.member.service.EmailService;
 import com.ormi.happyhouse.member.service.UserService;
@@ -117,7 +118,11 @@ public class UserController {
             // 사용자를 찾을 수 없는 경우
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "해당 계정을 찾을 수 없습니다."));
-        }catch (Exception e){
+        }catch (WithdrawnUserException wue) {
+            // 탈퇴한 사용자인 경우
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "탈퇴한 사용자입니다. 해당 계정으로 로그인할 수 없습니다."));
+        } catch (Exception e){
             // 기타 예외 처리
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "로그인 오류"));
@@ -162,17 +167,17 @@ public class UserController {
                     return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email, "nickname", nickname));
                 }
             } catch (ExpiredJwtException e) {
+                log.info("토큰 만료: {}", e.getMessage());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("isLoggedIn", false, "error", "Token expired"));
+                        .body(Map.of("isLoggedIn", false, "error", "Token expired", "shouldRefresh", true));
             } catch (JwtException e) {
+                log.info("잘못된 토큰: {}", e.getMessage());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("isLoggedIn", false, "error", "Invalid token"));
+                        .body(Map.of("isLoggedIn", false, "error", "Invalid token",  "shouldRefresh", false));
             }
-            log.info("check-auto token :{}", token);
         }
-        return ResponseEntity.ok(Map.of("isLoggedIn", false));
+        return ResponseEntity.ok(Map.of("isLoggedIn", false, "error", "No token provided", "shouldRefresh", false));
     }
-
     //비밀번호 찾기 - 임시 비밀번호 생성
     @PostMapping("/temppassword")
     public ResponseEntity<?> createTempPassword(@RequestBody ResetPwReqeust resetPwReq) {
@@ -187,5 +192,29 @@ public class UserController {
         }
     }
 
-
+  // 회원 탈퇴
+  @PutMapping("/withdrawal")
+  public ResponseEntity<?> withdrawalUser(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                            @RequestBody WithDrawalRequest withDrawalReq, HttpServletResponse response) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.replace("Bearer ", "");
+            try {
+                String email = jwtUtil.getEmailFromToken(token);
+                boolean result = userService.withDrawalUser(email, withDrawalReq.getPassword(), response);
+                if (result) {
+                    // 액세스 토큰 무효화를 위한 헤더 추가
+                    // response.setHeader("Clear-Site-Data", "\"cache\", \"cookies\", \"storage\"");
+                    return ResponseEntity.ok().body(Map.of("message", "회원 탈퇴가 완료되었습니다."));
+                } else {
+                    return ResponseEntity.badRequest().body("회원 탈퇴에 실패했습니다.");
+                }
+            } catch (BadCredentialsException e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("비밀번호가 일치하지 않습니다.");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 탈퇴 처리 중 오류가 발생했습니다.");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 토큰입니다.");
+        }
+    }
 }

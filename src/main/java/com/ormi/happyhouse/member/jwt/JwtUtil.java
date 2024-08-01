@@ -67,10 +67,12 @@ public class JwtUtil {
             log.error("잘못된 토큰 형식: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
             log.error("토큰 만료: {}", e.getMessage());
+            throw e;
         } catch (UnsupportedJwtException e) {
             log.error("지원하지 않는 토큰: {}", e.getMessage());
         } catch (JwtException e) {
             log.error("토큰 검증 오류: {}", e.getMessage());
+            throw e;
         }
         return false;
     }
@@ -92,55 +94,4 @@ public class JwtUtil {
                 .getPayload()
                 .get("tokenType", String.class);
     }
-/*
-    public String generateToken(String email, long validity){
-        Date now = new Date();
-        Date expDate = new Date(now.getTime() + validity);
-
-        return Jwts.builder()
-                .subject(email)
-                .issuedAt(now)
-                .expiration(expDate)
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes()), Jwts.SIG.HS256)
-                .compact();
-    }
-    //엑세스 토큰
-    public String generateAccessToken(String email) {
-        return generateToken(email, accessTokenValidity);
-    }
-    //리프레시 토큰
-    public String generateRefreshToken(String email) {
-        return generateToken(email, refreshTokenValidity);
-    }
-    // JWT 토큰 유효성 검사
-    public boolean validateToken(String token) {
-        try {
-
-            //토큰 서명 검증(올바른 키 사용 여부) / 토큰 구조 검증
-            //Jwts.parser().verifyWith((SecretKey) key).build().parseSignedClaims(token);
-            //return true;
-
-            Claims claims = Jwts.parser()
-                    .verifyWith((SecretKey) key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-            //만료 시간 검사
-            return !claims.getExpiration().before(new Date());
-        }catch (ExpiredJwtException exje){
-            return false; // 토큰 만료
-        }catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    public String getUsernameFromToken(String token) {
-        return Jwts.parser()
-                .verifyWith((SecretKey) key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
-    }
-*/
 }

@@ -45,7 +45,7 @@ public class SpringSecurityConfig {
                                 "/member/refresh", "/member/duplicateNickname",
                                 "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
-                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**").authenticated() //로그인 해야 가능
+                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal").authenticated() //로그인 해야 가능
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가

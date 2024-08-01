@@ -49,4 +49,8 @@ public class Users {
   public void resetPassword(String newPassword){
     this.password = newPassword;
   }
+  //회원 탈퇴
+  public void withDrawalUser(){
+    this.status = 2;
+  }
 }

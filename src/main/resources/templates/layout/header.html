@@ -41,67 +41,72 @@
     <script th:inline="javascript">
         function checkAuthStatus() {
             const token = localStorage.getItem('accessToken');
-            console.log('Current access token:', token); // 토큰 존재 여부 확인
             if(token) {
-                const payload = token.split('.')[1];
-                const decodedPayload = JSON.parse(atob(payload));
-                const expirationDate = new Date(decodedPayload.exp * 1000); // exp는 초 단위로 되어있으므로 밀리초로 변환
-                const currentDate = new Date();
-
-                // 토큰이 만료되었는지 확인
-                if (expirationDate < currentDate) {
-                    localStorage.removeItem('accessToken'); // 만료된 토큰 삭제
-                    showLoginRegisterLinks(); // 로그인/회원가입 링크 표시
-                    return;
-                }
-
-                fetch('/member/check-auth', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
-                    },
-                    credentials: 'include'
-                })
-                    .then(response => {
-                        console.log('Auth check 응답 확인:', response.status); // 응답 상태 확인
-                        if (response.ok) {
-                            return response.json();
-                        } else if (response.status === 401) {
-                            throw new Error('Unauthorized');
-                        }
-                        throw new Error('Server error');
-                    })
+                sendAuthenticatedRequest('/member/check-auth', 'GET')
                     .then(data => {
-                        console.log('Auth check 응답 데이터:', data); // 응답 데이터 확인
                         if (data.isLoggedIn) {
-                            document.getElementById('authSection').innerHTML = `
-                                <section>
-                                    <span>${data.nickname}님</span>
-                                    <button class="btn btn-primary ms-2" onclick="logout()">로그아웃</button>
-                                </section>
-                            `;
-                            document.getElementById('mypageLink').style.display = 'inline-block';
+                            updateUIForLoggedInUser(data.nickname);
                         } else {
                             showLoginRegisterLinks();
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error.message);
-                        if (error.message === 'Unauthorized') {
-                            console.log('리프레시 토큰 요청 시도');
-                            alert("리프레시 토큰 요청 시도");
-                            return refreshToken();
-                        }
                         console.error('인증 상태 확인 중 오류 발생:', error);
                         showLoginRegisterLinks();
                     });
-            }else{
+            } else {
                 showLoginRegisterLinks();
             }
         }
+        function sendAuthenticatedRequest(url, method, body) {
+            const token = localStorage.getItem('accessToken');
+            console.log('sendAuthenticatedRequest() 호출');
+            return fetch(url, {
+                method: method,
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body),
+                credentials: 'include'
+            })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (response.status === 204) { // No Content
+                        return { status: response.status, data: {} };
+                    }
+                    return response.text().then(text => {
+                        try {
+                            return { status: response.status, data: JSON.parse(text) };
+                        } catch (e) {
+                            console.error('JSON 파싱 오류:', e);
+                            return { status: response.status, data: { error: 'Invalid JSON response' } };
+                        }
+                    });
+                })
+                .then(({status, data}) => {
+                    console.log('응답 코드:', status, 'Data:', data);
+                    if (status === 200) {
+                        return data;
+                    } else if (status === 401) {
+                        console.log('토큰 만료, refreshToken() 시도');
+                        return refreshToken().then(newToken => {
+                            if (newToken) {
+                                localStorage.setItem('accessToken', newToken);
+                                return sendAuthenticatedRequest(url, method, body);
+                            } else {
+                                throw new Error('Token refresh failed');
+                            }
+                        });
+                    } else {
+                        throw new Error(data.error || 'Request failed');
+                    }
+                });
+        }
+
         function refreshToken() {
             console.log("refreshToken()");
-            fetch('/member/refresh', {
+            return fetch('/member/refresh', {
                 method: 'POST',
                 credentials: 'include'
             })
@@ -109,19 +114,28 @@
                     if (response.ok) {
                         const newAccessToken = response.headers.get('Authorization');
                         if (newAccessToken && newAccessToken.startsWith('Bearer ')) {
-                            localStorage.setItem('accessToken', newAccessToken.substring(7));
-                            return checkAuthStatus(); // 새 토큰으로 다시 인증 상태 확인
+                            return newAccessToken.substring(7);
                         }
-                    } else {
-                        throw new Error('Refresh failed');
                     }
+                    throw new Error('Refresh failed');
                 })
                 .catch(error => {
                     console.error('토큰 갱신 중 오류 발생:', error);
                     localStorage.removeItem('accessToken');
                     showLoginRegisterLinks();
+                    return null;
                 });
         }
+        function updateUIForLoggedInUser(nickname) {
+            document.getElementById('authSection').innerHTML = `
+                <section>
+                    <span>${nickname}님</span>
+                    <button class="btn btn-primary ms-2" onclick="logout()">로그아웃</button>
+                </section>
+            `;
+            document.getElementById('mypageLink').style.display = 'inline-block';
+        }
+
         function getEmailFromToken(token) {
             const payload = token.split('.')[1]; // JWT의 두 번째 부분(페이로드) 추출
             const decodedPayload = JSON.parse(atob(payload)); // Base64 디코딩 후 JSON으로 변환
