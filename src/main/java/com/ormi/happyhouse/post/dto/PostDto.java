@@ -1,5 +1,6 @@
 package com.ormi.happyhouse.post.dto;
 
+import com.ormi.happyhouse.post.domain.Comment;
 import com.ormi.happyhouse.post.domain.Post;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,6 +34,7 @@ public class PostDto {
 
     private boolean noticeYn;
 
+    private List<Comment> comments;
 
     public Post toEntity() {
         return new Post().builder()
@@ -43,6 +46,7 @@ public class PostDto {
                 .updatedAt(this.getUpdatedAt())
                 .deleteYn(this.isDeleteYn())
                 .noticeYn(this.isNoticeYn())
+                .comments(this.getComments())
                 .build();
     }
 
@@ -57,6 +61,7 @@ public class PostDto {
         postDto.setUpdatedAt(post.getUpdatedAt());
         postDto.setDeleteYn(post.isDeleteYn());
         postDto.setNoticeYn(post.isNoticeYn());
+        postDto.setComments(post.getComments());
         return postDto;
     }
 }

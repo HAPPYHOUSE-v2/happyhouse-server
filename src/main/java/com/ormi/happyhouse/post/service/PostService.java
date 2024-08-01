@@ -58,6 +58,7 @@ public class PostService {
                 .updatedAt(post.getUpdatedAt())
                 .noticeYn(post.isNoticeYn())
                 .deleteYn(post.isDeleteYn())
+                .comments(post.getComments())
                 .build();
     }
 
