@@ -1,6 +1,5 @@
 package com.ormi.happyhouse.post.controller;
 
-import com.ormi.happyhouse.post.domain.Post;
 import com.ormi.happyhouse.post.dto.PostDto;
 import com.ormi.happyhouse.post.service.PostService;
 import org.springframework.data.domain.Page;
@@ -24,7 +23,7 @@ public class PostController {
 
     // Create: 게시글 생성
     @PostMapping
-    public String savePost(@RequestBody PostDto postDto, Model model) {
+    public String savePost(@ModelAttribute PostDto postDto, Model model) {
         postService.savePost(postDto);
         return "redirect:/post";
     }
@@ -66,9 +65,25 @@ public class PostController {
         return "post/detail";
     }
 
+    // Read: 게시글 작성 페이지로 이동
+    @GetMapping("/form")
+    public String showForm(Model model) {
+        model.addAttribute("isEdit", false);
+        return "post/form";
+    }
+
+    // Read: 게시글 수정 페이지로 이동
+    @GetMapping("/edit/{post_id}")
+    public String showEditForm(@PathVariable("post_id") Long postId, Model model) {
+        PostDto post = postService.showPostDetail(postId);
+        model.addAttribute("post", post);
+        model.addAttribute("isEdit", true);
+        return "post/form";
+    }
+
     // Update: 게시글 수정
     @PutMapping("/{post_id}")
-    public String updatePost(@PathVariable("post_id") Long postId, @RequestBody PostDto postDto) {
+    public String updatePost(@PathVariable("post_id") Long postId, @ModelAttribute PostDto postDto) {
         postService.updatePost(postId, postDto);
         return "redirect:/post/" + postId;
     }
