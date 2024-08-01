@@ -36,5 +36,6 @@ out/
 ### VS Code ###
 .vscode/
 
-### Application Properties ###
+### 설정 ###
 application.properties
+application.yaml
