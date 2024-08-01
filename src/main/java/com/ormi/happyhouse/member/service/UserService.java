@@ -31,7 +31,6 @@ import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 //Spring Security에서 사용자 정보를 가져오는 인터페이스
 @Slf4j
@@ -43,7 +42,6 @@ public class UserService implements UserDetailsService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final EmailService emailService;
-    //private final StringRedisTemplate redisTemplate;
     private final @Qualifier("stringRedisTemplate") StringRedisTemplate redisTemplate;
 
     // 회원가입
@@ -53,10 +51,6 @@ public class UserService implements UserDetailsService {
         if (!StringUtils.hasText(userDto.getEmail())) {
             throw new UserRegistrationException("이메일은 필수 입력 항목입니다.");
         }
-        /*// 이메일 중복 체크
-        if (usersRepository.existsByEmail(userDto.getEmail())) {
-            throw new UserRegistrationException("이미 사용 중인 이메일입니다.");
-        }*/
 
         // 이메일 중복 체크 및 탈퇴 사용자 확인
         Optional<Users> existingUser = usersRepository.findByEmail(userDto.getEmail());

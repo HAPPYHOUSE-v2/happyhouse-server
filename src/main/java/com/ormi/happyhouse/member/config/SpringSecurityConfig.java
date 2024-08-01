@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -44,8 +45,9 @@ public class SpringSecurityConfig {
                         .requestMatchers("/", "/member/register", "/member/login",
                                 "/member/refresh", "/member/duplicateNickname",
                                 "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post").permitAll()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
-                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal").authenticated() //로그인 해야 가능
+                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/post/**", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가

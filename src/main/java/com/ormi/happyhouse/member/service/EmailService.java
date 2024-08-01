@@ -21,7 +21,8 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     // Redis를 사용하여 인증코드 저장
     //private final RedisTemplate<String, String> redisTemplate;
-    private final @Qualifier("stringRedisTemplate") StringRedisTemplate redisTemplate;
+    //private final @Qualifier("stringRedisTemplate") StringRedisTemplate redisTemplate;
+    private final  StringRedisTemplate redisTemplate;
 
     //이메일 인증 코드 전송
     public void sendVerificationEmail(String recipient) {
