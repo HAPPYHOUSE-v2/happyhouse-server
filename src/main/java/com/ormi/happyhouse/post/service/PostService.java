@@ -164,10 +164,10 @@ public class PostService {
             try {
                 if (jwtUtil.validateToken(token)) {
                     String email = jwtUtil.getEmailFromToken(token);
-                    Optional<Users> userByPost = usersRepository.findById(postId);
-                    Users user = userByPost.orElseThrow(() -> new RuntimeException("User Not Found"));
+                    Optional<Post> postById = postRepository.findById(postId);
+                    Post post = postById.orElseThrow(() -> new RuntimeException("User Not Found"));
 
-                    return email.equals(user.getEmail());
+                    return email.equals(post.getUsers().getEmail());
                 }
             } catch (ExpiredJwtException e) {
                 log.info("토큰 만료: {}", e.getMessage());

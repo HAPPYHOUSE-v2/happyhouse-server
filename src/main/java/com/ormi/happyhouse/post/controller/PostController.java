@@ -81,14 +81,14 @@ public class PostController {
     @GetMapping("/{post_id}")
     public String showPostDetail(
             @PathVariable("post_id") Long postId,
-//            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             Model model
     ) {
         PostDto post = postService.showPostDetail(postId);
-//        boolean isYourPost = postService.isYourPost(postId, authHeader);
+        boolean isYourPost = postService.isYourPost(postId, authHeader);
 
         model.addAttribute("post", post);
-        model.addAttribute("isYourPost", true);
+        model.addAttribute("isYourPost", isYourPost);
         return "post/detail";
 
     }
