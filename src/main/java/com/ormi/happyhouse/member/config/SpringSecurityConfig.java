@@ -48,7 +48,7 @@ public class SpringSecurityConfig {
                         .requestMatchers("/", "/member/register", "/member/login",
                                 "/member/refresh", "/member/duplicateNickname",
                                 "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/post").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post", "/static/**", "/image/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/post").authenticated()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
                         .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
@@ -57,6 +57,12 @@ public class SpringSecurityConfig {
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가
                 .exceptionHandling(exceptions -> exceptions
+                                /*.authenticationEntryPoint((request, response, authException) -> {
+                                    response.sendRedirect("/error/401");
+                                })
+                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                    response.sendRedirect("/error/403");
+                                })*/
                         .authenticationEntryPoint((request, response, authException) -> { //인증 실패 시 401
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })

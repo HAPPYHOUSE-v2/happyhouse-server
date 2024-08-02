@@ -1,6 +1,7 @@
 package com.ormi.happyhouse.member.jwt;
 
 import com.ormi.happyhouse.member.service.UserService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -42,20 +43,52 @@ public class JwtFilter extends OncePerRequestFilter {
         String accessToken = extractAccessToken(request);
         String refreshToken = extractRefreshTokenFromCookie(request);
 
-        if (accessToken != null && jwtUtil.validateToken(accessToken)) {
-            processToken(accessToken);
-        } else if (refreshToken != null && jwtUtil.validateToken(refreshToken)) {
-            // Access Token이 유효하지 않고 Refresh Token이 유효한 경우
-            // 새로운 Access Token을 발급하고 응답 헤더에 추가
-            String email = jwtUtil.getEmailFromToken(refreshToken);
-            String role = jwtUtil.getRoleFromToken(refreshToken); //권한 추가
-            String newAccessToken = jwtUtil.generateAccessToken(email, role); //권한 추가
-            response.setHeader("Authorization", "Bearer " + newAccessToken);
-            processToken(newAccessToken);
+        try{
+            if (accessToken != null && jwtUtil.validateToken(accessToken)) {
+                processToken(accessToken);
+            } else if (refreshToken != null && jwtUtil.validateToken(refreshToken)) {
+                // Access Token이 유효하지 않고 Refresh Token이 유효한 경우
+                // 새로운 Access Token을 발급하고 응답 헤더에 추가
+                String email = jwtUtil.getEmailFromToken(refreshToken);
+                String role = jwtUtil.getRoleFromToken(refreshToken); //권한 추가
+                String newAccessToken = jwtUtil.generateAccessToken(email, role); //권한 추가
+                response.setHeader("Authorization", "Bearer " + newAccessToken);
+                processToken(newAccessToken);
+            }else{ //액세스 토큰 없거나 리프레시 토큰 유효하지 않은 경우 401
+                //response.sendRedirect("/error/401");
+                handleAuthenticationException(response, "인증이 필요");
+                return;
+            }
+            filterChain.doFilter(request, response);
+        }catch (ExpiredJwtException e) {
+            // 토큰 만료 예외 처리
+            handleTokenExpiration(response, refreshToken);
+        } catch (Exception e){
+            //response.sendRedirect("/error/401");
+            handleAuthenticationException(response, "인증 처리 중 오류 발생");
         }
-
-        filterChain.doFilter(request, response);
     }
+    private void handleTokenExpiration(HttpServletResponse response, String refreshToken) throws IOException {
+        if (refreshToken != null && jwtUtil.validateToken(refreshToken)) {
+            // 리프레시 토큰으로 새 액세스 토큰 발급
+            String email = jwtUtil.getEmailFromToken(refreshToken);
+            String role = jwtUtil.getRoleFromToken(refreshToken);
+            String newAccessToken = jwtUtil.generateAccessToken(email, role);
+            response.setHeader("Authorization", "Bearer " + newAccessToken);
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.getWriter().write("{\"message\": \"New access token issued\"}");
+        } else {
+            // 리프레시 토큰도 만료된 경우
+            handleAuthenticationException(response, "세션이 만료되었습니다. 다시 로그인해 주세요.");
+        }
+    }
+    //인증 예외 처리
+    private void handleAuthenticationException(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
+    }
+
     private void processToken(String token) {
         String email = jwtUtil.getEmailFromToken(token);
         String role = jwtUtil.getRoleFromToken(token); // 권한
@@ -67,6 +100,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 userDetails, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
+
     // 공개 접근 경로인지 확인하는 메소드
     private boolean isPublicPath(String path, String method) {
         if(path.equals("/post") && method.equalsIgnoreCase("GET")){
