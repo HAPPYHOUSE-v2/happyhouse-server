@@ -28,8 +28,10 @@
                     <span class="text-muted ms-3" th:text="'조회수: ' + ${post.viewCount}"></span>
                 </div>
                 <div th:if="${isYourPost}">
-                    <a th:href="@{/post/edit/{post_id}(post_id = ${post.postId})}" class="btn btn-outline-primary btn-sm me-2">수정</a>
-                    <form id="deletePost" th:action="@{/post/delete/{post_id}(post_id = ${post.postId})}" method="post" class="d-inline">
+                    <a th:href="@{/post/edit/{post_id}(post_id = ${post.postId})}"
+                       class="btn btn-outline-primary btn-sm me-2">수정</a>
+                    <form id="deletePost" th:action="@{/post/delete/{post_id}(post_id = ${post.postId})}" method="post"
+                          class="d-inline">
                         <input type="hidden" name="_method" value="put">
                         <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
                     </form>
@@ -53,10 +55,11 @@
     <article class="mb-5">
         <!-- 댓글 작성 -->
         <div class="mb-4">
-            <form th:action="@{/comment/{post_id}(post_id = ${post.postId})}" method="post" class="d-flex">
-                <input type="hidden" name="user_id" value="1">
+            <form id="commentForm" th:action="@{/comment/{post_id}(post_id = ${post.postId})}" method="post"
+                  class="d-flex">
                 <div class="flex-grow-1 me-2">
-                    <input type="text" id="comment" name="content" class="form-control" placeholder="댓글을 입력하세요" required>
+                    <input type="text" id="comment" name="content" class="form-control" placeholder="댓글을 입력하세요"
+                           required>
                 </div>
                 <button type="submit" class="btn btn-primary">댓글 등록</button>
             </form>
@@ -70,7 +73,8 @@
                     <p class="mb-1" th:text="${comment.content}"></p>
                     <span class="text-muted" th:text="${comment.createdAt}"></span>
                 </div>
-                <form th:action="@{/comment/delete/{comment_id}(comment_id = ${comment.commentId})}" method="post" class="d-inline">
+                <form id="deleteComment" th:action="@{/comment/delete/{comment_id}(comment_id = ${comment.commentId})}"
+                      method="post" class="d-inline">
                     <input type="hidden" name="_method" value="put">
                     <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
                 </form>
@@ -81,9 +85,9 @@
 
 <script>
     // 게시글 삭제
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const deletePost = document.getElementById('deletePost');
-        deletePost.addEventListener('submit', function(e) {
+        deletePost.addEventListener('submit', function (e) {
             e.preventDefault(); //기본 이벤트 막음
 
             const formData = new FormData(deletePost); //등록 form
@@ -107,6 +111,74 @@
                     console.error('Error:', error);
                     alert(error.message);
                 });
+        });
+
+        // 댓글 생성
+        const commentForm = document.getElementById("commentForm")
+        commentForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const token = localStorage.getItem('accessToken')
+            const formData = new FormData(commentForm)
+
+            fetch(commentForm.action, {
+                method: 'POST',
+                headers: { //Request Header
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData //Request Body (제목, 내용, 등)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response;  // 성공 시 리다이렉트
+                    } else {
+                        throw new Error('댓글 등록에 실패했습니다.'); //catch로 들어감
+                    }
+                })
+                .then(response => {
+                    if (response.redirected) { // 리다이렉트 응답 확인
+                        window.location.href = response.url; // 리다이렉트 URL로 이동
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        });
+
+        // 댓글 삭제
+        const deleteCommentForms = document.querySelectorAll('form[id^="deleteComment"]');
+        deleteCommentForms.forEach(form => {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const token = localStorage.getItem('accessToken');
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: formData
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response;  // 성공 시 리다이렉트
+                        } else {
+                            throw new Error('댓글 삭제에 실패했습니다.'); // catch로 들어감
+                        }
+                    })
+                    .then(response => {
+                        if (response.redirected) { // 리다이렉트 응답 확인
+                            window.location.href = response.url; // 리다이렉트 URL로 이동
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message);
+                    });
+            });
         });
     });
 </script>

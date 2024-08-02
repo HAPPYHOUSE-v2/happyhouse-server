@@ -153,7 +153,7 @@ public class PostService {
                     .users(post.getUsers())
                     .build();
             postRepository.save(deletedPost);
-        }
+        } throw new IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.");
     }
 
 
