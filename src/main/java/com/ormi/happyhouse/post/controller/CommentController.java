@@ -57,8 +57,8 @@ public class CommentController {
             httpHeaders.setLocation(redirectUri);
             return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
         }catch (Exception e){
-            log.error("댓글 저장 중 에러",e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 저장 중 에러 :"+e.getMessage());
+            log.error("댓글 삭제 중 에러",e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 삭제 중 에러 :"+e.getMessage());
         }
     }
 }
