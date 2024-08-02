@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,6 +31,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity //Spring 설정 클래스, Spring Security 활성화
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SpringSecurityConfig {
 
     private final UserService userService;
@@ -45,14 +48,21 @@ public class SpringSecurityConfig {
                         .requestMatchers("/", "/member/register", "/member/login",
                                 "/member/refresh", "/member/duplicateNickname",
                                 "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/post").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post", "/static/**", "/image/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/post").authenticated()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
                         .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
+                        .requestMatchers("/admin/**").hasRole("ADMIN") //관리자 권한만
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가
                 .exceptionHandling(exceptions -> exceptions
+                                /*.authenticationEntryPoint((request, response, authException) -> {
+                                    response.sendRedirect("/error/401");
+                                })
+                                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                                    response.sendRedirect("/error/403");
+                                })*/
                         .authenticationEntryPoint((request, response, authException) -> { //인증 실패 시 401
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         })
