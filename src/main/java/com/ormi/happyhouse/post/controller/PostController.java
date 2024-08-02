@@ -86,9 +86,11 @@ public class PostController {
     ) {
         PostDto post = postService.showPostDetail(postId);
         boolean isYourPost = postService.isYourPost(postId, authHeader);
+        String yourEmail = postService.yourEmail(authHeader);
 
         model.addAttribute("post", post);
         model.addAttribute("isYourPost", isYourPost);
+        model.addAttribute("yourEmail", yourEmail);
         return "post/detail";
 
     }

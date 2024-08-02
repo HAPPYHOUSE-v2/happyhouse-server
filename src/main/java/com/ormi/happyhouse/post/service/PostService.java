@@ -180,4 +180,22 @@ public class PostService {
         }
         return false;
     }
+
+    // 토큰에 해당하는 이메일 반환
+    public String yourEmail(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
+            try {
+                if (jwtUtil.validateToken(token)) {
+                    return jwtUtil.getEmailFromToken(token);
+                }
+            } catch (ExpiredJwtException e) {
+                log.info("토큰 만료: {}", e.getMessage());
+
+            } catch (JwtException e) {
+                log.info("잘못된 토큰: {}", e.getMessage());
+
+            }
+        } throw new IllegalArgumentException("잘못된 토큰");
+    }
 }
