@@ -1,22 +1,30 @@
 package com.ormi.happyhouse.post.service;
 
 import com.ormi.happyhouse.member.domain.Users;
+import com.ormi.happyhouse.member.jwt.JwtUtil;
 import com.ormi.happyhouse.member.repository.UsersRepository;
 import com.ormi.happyhouse.post.domain.File;
 import com.ormi.happyhouse.post.domain.Post;
 import com.ormi.happyhouse.post.dto.PostDto;
 import com.ormi.happyhouse.post.repository.FileRepository;
 import com.ormi.happyhouse.post.repository.PostRepository;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -24,18 +32,24 @@ public class PostService {
     private final PostRepository postRepository;
     private final UsersRepository usersRepository;
     private final FileRepository fileRepository;
+    private final JwtUtil jwtUtil;
     private final S3UploadService s3UploadService;
 
     // Create: 게시글 생성 메서드
-    public void savePost(PostDto postDto, MultipartFile file) throws IOException {
+    public void savePost(PostDto postDto, MultipartFile file, String authHeader) throws IOException {
         postDto.setCreatedAt(new Date());
         postDto.setViewCount(0L);
 
-        Users users = usersRepository.findById(postDto.getUserId())
+
+        String token = authHeader.substring(7);
+        String email = jwtUtil.getEmailFromToken(token);
+
+
+        Users users = usersRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User Not Found"));
         postDto.setUsers(users);
 
-        if(file != null && !file.isEmpty()) {
+        if (file != null && !file.isEmpty()) {
             File newFile = new File().builder()
                     .fileUrl(s3UploadService.saveFile(file))
                     .fileName(file.getOriginalFilename())
@@ -67,11 +81,10 @@ public class PostService {
 
     // Read_Method: view_count 1증가 시키는 메서드
     public Post viewCountPlusPost(Optional<Post> postById) {
-        Post post = postById.orElseThrow(()-> new IllegalArgumentException("post not found"));
+        Post post = postById.orElseThrow(() -> new IllegalArgumentException("post not found"));
 
         return new Post().builder()
                 .postId(post.getPostId())
-//                .userId(post.getUserId())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .viewCount(post.getViewCount() + 1)
@@ -88,11 +101,10 @@ public class PostService {
     // Update: 게시글 수정 메서드
     public void updatePost(Long postId, PostDto postDto, MultipartFile file) throws IOException {
 
-
         Optional<Post> postById = postRepository.findById(postId);
-        Post post = postById.orElseThrow(()-> new IllegalArgumentException("post not found"));
+        Post post = postById.orElseThrow(() -> new IllegalArgumentException("post not found"));
 
-        if(file != null && !file.isEmpty()) {
+        if (file != null && !file.isEmpty()) {
             File newFile = new File().builder()
                     .fileUrl(s3UploadService.saveFile(file))
                     .fileName(file.getOriginalFilename())
@@ -104,7 +116,6 @@ public class PostService {
 
         Post updatedPost = new Post().builder()
                 .postId(post.getPostId())
-//                .userId(post.getUserId())
                 .title(postDto.getTitle())
                 .content(postDto.getContent())
                 .viewCount(post.getViewCount())
@@ -120,24 +131,53 @@ public class PostService {
     }
 
     // Delete: 게시글 삭제 메서드
-    public void deletePost(Long postId) {
+    public void deletePost(Long postId, String authHeader) {
         Optional<Post> postById = postRepository.findById(postId);
-        Post post = postById.orElseThrow(()-> new IllegalArgumentException("post not found"));
+        Post post = postById.orElseThrow(() -> new IllegalArgumentException("post not found"));
 
-        Post deletedPost = new Post().builder()
-                .postId(post.getPostId())
-//                .userId(post.getUserId())
-                .title(post.getTitle())
-                .content(post.getContent())
-                .viewCount(post.getViewCount())
-                .createdAt(post.getCreatedAt())
-                .updatedAt(post.getUpdatedAt())
-                .noticeYn(post.isNoticeYn())
-                .deleteYn(true)
-                .comments(post.getComments())
-                .files(post.getFiles())
-                .users(post.getUsers())
-                .build();
-        postRepository.save(deletedPost);
+        String token = authHeader.substring(7);
+        String email = jwtUtil.getEmailFromToken(token);
+
+        if (post.getUsers().getEmail().equals(email)) {
+            Post deletedPost = new Post().builder()
+                    .postId(post.getPostId())
+                    .title(post.getTitle())
+                    .content(post.getContent())
+                    .viewCount(post.getViewCount())
+                    .createdAt(post.getCreatedAt())
+                    .updatedAt(post.getUpdatedAt())
+                    .noticeYn(post.isNoticeYn())
+                    .deleteYn(true)
+                    .comments(post.getComments())
+                    .files(post.getFiles())
+                    .users(post.getUsers())
+                    .build();
+            postRepository.save(deletedPost);
+        }
+    }
+
+
+    // 토큰의 user 값과 해당 포스트의 user값이 같은지 확인
+    public boolean isYourPost(Long postId, String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
+            try {
+                if (jwtUtil.validateToken(token)) {
+                    String email = jwtUtil.getEmailFromToken(token);
+                    Optional<Users> userByPost = usersRepository.findById(postId);
+                    Users user = userByPost.orElseThrow(() -> new RuntimeException("User Not Found"));
+
+                    return email.equals(user.getEmail());
+                }
+            } catch (ExpiredJwtException e) {
+                log.info("토큰 만료: {}", e.getMessage());
+
+            } catch (JwtException e) {
+                log.info("잘못된 토큰: {}", e.getMessage());
+
+            }
+
+        }
+        return false;
     }
 }
