@@ -9,16 +9,11 @@
 <body>
 <!-- 헤더 포함 -->
 <header th:replace="~{layout/header :: header}"></header>
-
-<header>
-    <a th:href="@{/post}">
-        <h1>커뮤니티</h1>
-    </a>
-</header>
-
+<h1>커뮤니티</h1>
 <!-- 새로운 게시글 작성 -->
 <article class="write" th:unless="${isEdit}">
-    <form th:action="@{/post}" method="post" enctype="multipart/form-data">
+    <!--<form th:action="@{/post}" method="post" enctype="multipart/form-data">-->
+    <form id="postForm" th:action="@{/post}" method="post" enctype="multipart/form-data">
         <!-- 게시글 작성하는 유저의 값이 필요 -->
         <input type="hidden" name="userId" value=1 />
 
@@ -48,14 +43,12 @@
 <article class="write" th:if="${isEdit}">
     <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="_method" value="put">
-
         <div class="title">
             <label for="title"></label>
             <input type="text" id="title" name="title" th:value="${post.title}" class="title-box">
             <label for="notice"> 공지글 </label>
             <input type="checkbox" id="notice" name="noticeYn" th:checked="${post.noticeYn}">
         </div>
-
         <!-- 첨부파일 -->
         <div th:each="file : ${post.files}" class="file">
             <span>첨부파일: </span>
@@ -74,6 +67,36 @@
         <button type="submit"> 수정 </button>
     </form>
 </article>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const createForm = document.getElementById('postForm');
+        createForm.addEventListener('submit', function(e) {
+            e.preventDefault(); //기본 이벤트 막음
+
+            const formData = new FormData(createForm); //등록 form
+            const token = localStorage.getItem('accessToken'); //토큰
+            //서버에 요청
+            fetch(createForm.action, {
+                method: 'POST',
+                headers: { //Request Header
+                    'Authorization': 'Bearer ' + token
+                },
+                body: formData //Request Body (제목, 내용, 등)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/post';  // 성공 시 리다이렉트
+                    } else {
+                        throw new Error('게시글 작성에 실패했습니다.'); //catch로 들어감
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        });
+    });
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -46,8 +46,9 @@ public class SpringSecurityConfig {
                                 "/member/refresh", "/member/duplicateNickname",
                                 "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/post").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/post").authenticated()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
-                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/post/**", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
+                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가
@@ -72,6 +73,7 @@ public class SpringSecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true); //쿠키나 인증 헤더를 포함한 요청 허용
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type")); //명시적으로 허용
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

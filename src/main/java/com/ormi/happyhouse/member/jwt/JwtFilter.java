@@ -33,7 +33,7 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
         // 공개 접근 경로에 대해서는 필터 처리 skip( 공개된 페이지는 토큰 인증 X)
-        if (isPublicPath(request.getRequestURI())) {
+        if (isPublicPath(request.getRequestURI(), request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -61,15 +61,17 @@ public class JwtFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
     // 공개 접근 경로인지 확인하는 메소드
-    private boolean isPublicPath(String path) {
+    private boolean isPublicPath(String path, String method) {
+        if(path.equals("/post") && method.equalsIgnoreCase("GET")){
+            return true;
+        }
         return path.equals("/member/register") ||
                 path.equals("/member/login") ||
                 path.equals("/member/duplicateNickname") ||
                 path.equals("/member/send-verification-email") ||
                 path.equals("/")||
                 path.equals("/member/verify-email") ||
-                path.equals("/member/temppassword") ||
-                path.equals("/post");
+                path.equals("/member/temppassword");
     }
     //로그아웃 요청 여부 확인
     private boolean isLogoutRequest(HttpServletRequest request) {
