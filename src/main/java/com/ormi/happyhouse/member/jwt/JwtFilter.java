@@ -8,11 +8,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 //JWT를 사용한 인증을 처리하는 security 필터
 //OncePerRequestFilter를 상속 받아 모든 요청에 대해 한번씩 실행함
@@ -46,7 +48,8 @@ public class JwtFilter extends OncePerRequestFilter {
             // Access Token이 유효하지 않고 Refresh Token이 유효한 경우
             // 새로운 Access Token을 발급하고 응답 헤더에 추가
             String email = jwtUtil.getEmailFromToken(refreshToken);
-            String newAccessToken = jwtUtil.generateAccessToken(email);
+            String role = jwtUtil.getRoleFromToken(refreshToken); //권한 추가
+            String newAccessToken = jwtUtil.generateAccessToken(email, role); //권한 추가
             response.setHeader("Authorization", "Bearer " + newAccessToken);
             processToken(newAccessToken);
         }
@@ -55,9 +58,13 @@ public class JwtFilter extends OncePerRequestFilter {
     }
     private void processToken(String token) {
         String email = jwtUtil.getEmailFromToken(token);
+        String role = jwtUtil.getRoleFromToken(token); // 권한
         UserDetails userDetails = userService.loadUserByUsername(email);
+        //UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+        //        userDetails, null, userDetails.getAuthorities());
+        //권한
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
+                userDetails, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
     // 공개 접근 경로인지 확인하는 메소드

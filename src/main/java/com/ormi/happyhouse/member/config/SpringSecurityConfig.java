@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,6 +31,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity //Spring 설정 클래스, Spring Security 활성화
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class SpringSecurityConfig {
 
     private final UserService userService;
@@ -49,6 +52,7 @@ public class SpringSecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/post").authenticated()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
                         .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
+                        .requestMatchers("/admin/**").hasRole("ADMIN") //관리자 권한만
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가

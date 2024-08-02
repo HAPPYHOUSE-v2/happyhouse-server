@@ -163,8 +163,10 @@ public class UserController {
                 if (jwtUtil.validateToken(token)) {
                     String email = jwtUtil.getEmailFromToken(token);
                     log.info("토큰에서 메일 추출 :{}", email);
+                    String role = jwtUtil.getRoleFromToken(token);
+                    log.info("토큰에서 권한 추출 :{}", role);
                     String nickname = userService.findNicknameByEmail(email);
-                    return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email, "nickname", nickname));
+                    return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email, "nickname", nickname, "role", role));
                 }
             } catch (ExpiredJwtException e) {
                 log.info("토큰 만료: {}", e.getMessage());

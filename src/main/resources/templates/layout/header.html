@@ -80,7 +80,8 @@
                         try {
                             return { status: response.status, data: JSON.parse(text) };
                         } catch (e) {
-                            console.error('JSON 파싱 오류:', e);
+                            console.log('JSON 파싱 오류:', e);
+                            console.log('data :', text);
                             return { status: response.status, data: { error: 'Invalid JSON response' } };
                         }
                     });
@@ -129,21 +130,44 @@
         }
         //로그인될 경우 생성
         function updateUIForLoggedInUser(nickname) {
-            document.getElementById('authSection').innerHTML = `
+            //권한
+            const token = localStorage.getItem('accessToken');
+            //const decodedToken = parseJwt(token);
+            const userRole = parseJwt(token).role; // 토큰에서 role 정보 추출
+
+            //let adminMenuHtml = '';
+            let authMenuHtml = `
                 <section>
                     <span>${nickname}님</span>
                     <button class="btn btn-primary ms-2" onclick="logout()">로그아웃</button>
                 </section>
             `;
+            if (userRole === 'ADMIN') {
+                let adminMenuHtml = '<li class="nav-item"><a class="nav-link" href="/admin">관리자 페이지</a></li>';
+                authMenuHtml = adminMenuHtml+authMenuHtml;
+                //adminMenuHtml = '<li class="nav-item"><a class="nav-link" href="/admin">관리자 페이지</a></li>';
+            }
+
+            //document.getElementById('navbarNav').querySelector('ul').innerHTML += adminMenuHtml;
+            document.getElementById('authSection').innerHTML = authMenuHtml;
+
+            /*document.getElementById('authSection').innerHTML = `
+                <section>
+                    <span>${nickname}님</span>
+                    <button class="btn btn-primary ms-2" onclick="logout()">로그아웃</button>
+                </section>
+            `;*/
+
             document.getElementById('mypageLink').style.display = 'inline-block';
         }
-
+        //토큰에서 이메일 추출
         function getEmailFromToken(token) {
             const payload = token.split('.')[1]; // JWT의 두 번째 부분(페이로드) 추출
             const decodedPayload = JSON.parse(atob(payload)); // Base64 디코딩 후 JSON으로 변환
             return decodedPayload.email; // 이메일 정보 반환
         }
-        function logout() { //로그아웃
+        //로그아웃 처리
+        function logout() {
             const accessToken = localStorage.getItem('accessToken');
             if (!accessToken) {
                 console.error('엑세스 토큰을 찾을 수 없습니다.');
@@ -178,7 +202,7 @@
                     console.error('로그아웃 중 오류 발생:', error);
                 });
         }
-
+        //회원이 아닐 경우 로그인, 로그아웃 버튼 표시
         function showLoginRegisterLinks() {
             document.getElementById('authSection').innerHTML = `
             <a href="/member/login" class="btn btn-outline-primary me-2">로그인</a>
@@ -186,7 +210,12 @@
         `;
             document.getElementById('mypageLink').style.display = 'none';
         }
-
+        //JWT 디코딩
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            return JSON.parse(window.atob(base64));
+        }
         // 페이지 로드 시 인증 상태 확인
         document.addEventListener('DOMContentLoaded', checkAuthStatus);
     </script>
