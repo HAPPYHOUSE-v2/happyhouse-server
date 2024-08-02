@@ -1,5 +1,6 @@
 package com.ormi.happyhouse.post.controller;
 
+import com.ormi.happyhouse.member.jwt.JwtUtil;
 import com.ormi.happyhouse.post.dto.PostDto;
 import com.ormi.happyhouse.post.service.PostService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URI;
+
 @Slf4j
 @Controller
 @RequestMapping("/post")
@@ -25,19 +29,26 @@ import java.io.IOException;
 public class PostController {
 
     private final PostService postService;
+    private final JwtUtil jwtUtil;
 
     // Create: 게시글 생성
     @PostMapping
-    public ResponseEntity<?> savePost(@ModelAttribute PostDto postDto, @RequestParam(value = "file", required = false) MultipartFile file) throws IOException {
+    public ResponseEntity<?> savePost(
+            @ModelAttribute PostDto postDto,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) throws IOException {
+
         log.info("/post POST 요청");
         try{
-            postService.savePost(postDto, file);
+            postService.savePost(postDto, file, authHeader);
             return ResponseEntity.ok().build(); //성공 시 200
         }catch (Exception e){
             log.error("게시글 저장 중 에러",e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
         }
     }
+
     // Read: 게시글 목록 조회
     @GetMapping
     public String showAllPost(
@@ -68,12 +79,18 @@ public class PostController {
 
     // Read: 게시글 상세 조회
     @GetMapping("/{post_id}")
-    public String showPostDetail(@PathVariable("post_id") Long postId, Model model) {
+    public String showPostDetail(
+            @PathVariable("post_id") Long postId,
+//            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Model model
+    ) {
         PostDto post = postService.showPostDetail(postId);
+//        boolean isYourPost = postService.isYourPost(postId, authHeader);
+
         model.addAttribute("post", post);
-        model.addAttribute("comments", post.getComments());
-        model.addAttribute("files", post.getFiles());
+        model.addAttribute("isYourPost", true);
         return "post/detail";
+
     }
 
     // Read: 게시글 작성 페이지로 이동
@@ -94,15 +111,39 @@ public class PostController {
 
     // Update: 게시글 수정
     @PutMapping("/{post_id}")
-    public String updatePost(@PathVariable("post_id") Long postId, @ModelAttribute PostDto postDto, @RequestParam("file") MultipartFile file) throws IOException {
-        postService.updatePost(postId, postDto, file);
-        return "redirect:/post/" + postId;
+    public ResponseEntity<?> updatePost(
+            @PathVariable("post_id") Long postId,
+            @ModelAttribute PostDto postDto,
+            @RequestParam("file") MultipartFile file
+    ) throws IOException {
+
+        log.info("/post/{post_id} PUT 요청");
+        try{
+            postService.updatePost(postId, postDto, file);
+            URI redirectUri = new URI("/post/" + postId);
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setLocation(redirectUri);
+            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
+        }catch (Exception e){
+            log.error("게시글 저장 중 에러",e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
+        }
     }
 
     // Delete: 게시글 삭제
     @PutMapping("/delete/{post_id}")
-    public String deletePost(@PathVariable("post_id") Long postId) {
-        postService.deletePost(postId);
-        return "redirect:/post";
+    public ResponseEntity<?> deletePost(
+            @PathVariable("post_id") Long postId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+
+        log.info("/delete/{post_id} PUT 요청");
+        try{
+            postService.deletePost(postId, authHeader);
+            return ResponseEntity.ok().build(); // 성공 시 200
+        }catch (Exception e){
+            log.error("게시글 저장 중 에러",e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
+        }
     }
 }
