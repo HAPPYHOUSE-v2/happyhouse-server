@@ -1,6 +1,8 @@
 package com.ormi.happyhouse.post.dto;
 
+import com.ormi.happyhouse.member.domain.Users;
 import com.ormi.happyhouse.post.domain.Comment;
+import com.ormi.happyhouse.post.domain.File;
 import com.ormi.happyhouse.post.domain.Post;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,9 +38,13 @@ public class PostDto {
 
     private List<Comment> comments;
 
+    private List<File> files;
+
+    private Users users;
+
     public Post toEntity() {
         return new Post().builder()
-                .userId(this.getUserId())
+//                .userId(this.getUserId())
                 .title(this.getTitle())
                 .content(this.getContent())
                 .viewCount(this.getViewCount())
@@ -47,13 +53,15 @@ public class PostDto {
                 .deleteYn(this.isDeleteYn())
                 .noticeYn(this.isNoticeYn())
                 .comments(this.getComments())
+                .files(this.getFiles())
+                .users(this.getUsers())
                 .build();
     }
 
     public static PostDto fromEntity(Post post) {
         PostDto postDto = new PostDto();
         postDto.setPostId(post.getPostId());
-        postDto.setUserId(post.getUserId());
+//        postDto.setUserId(post.getUserId());
         postDto.setTitle(post.getTitle());
         postDto.setContent(post.getContent());
         postDto.setViewCount(post.getViewCount());
@@ -62,6 +70,8 @@ public class PostDto {
         postDto.setDeleteYn(post.isDeleteYn());
         postDto.setNoticeYn(post.isNoticeYn());
         postDto.setComments(post.getComments());
+        postDto.setFiles(post.getFiles());
+        postDto.setUsers(post.getUsers());
         return postDto;
     }
 }

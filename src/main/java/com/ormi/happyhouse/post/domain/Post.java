@@ -1,5 +1,6 @@
 package com.ormi.happyhouse.post.domain;
 
+import com.ormi.happyhouse.member.domain.Users;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,8 +20,8 @@ public class Post {
     @Column(name = "post_id")
     private Long postId;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+//    @Column(name = "user_id", nullable = false, insertable = false, updatable = false)
+//    private Long userId;
 
     @Column(nullable = false)
     private String title;
@@ -45,4 +46,11 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Comment> comments;
+
+    @OneToMany(mappedBy = "post")
+    private List<File> files;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private Users users;
 }
