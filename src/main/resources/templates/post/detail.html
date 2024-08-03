@@ -27,7 +27,8 @@
                     <span class="text-muted ms-3" th:text="${#dates.format(post.createdAt, 'yyyy.MM.dd')}"></span>
                     <span class="text-muted ms-3" th:text="'조회수: ' + ${post.viewCount}"></span>
                 </div>
-                <div th:if="${isYourPost}">
+<!--                <div th:if="${isYourPost}">-->
+                <div>
                     <a th:href="@{/post/edit/{post_id}(post_id = ${post.postId})}"
                        class="btn btn-outline-primary btn-sm me-2">수정</a>
                     <form id="deletePost" th:action="@{/post/delete/{post_id}(post_id = ${post.postId})}" method="post"
@@ -74,7 +75,8 @@
                     <span class="text-muted" th:text="${comment.createdAt}"></span>
                 </div>
                 <form id="deleteComment" th:action="@{/comment/delete/{comment_id}(comment_id = ${comment.commentId})}"
-                      method="post" class="d-inline" th:if="${comment.getUsers().email} == ${yourEmail}">
+                      method="post" class="d-inline" >
+<!--                      th:if="${comment.getUsers().email} == ${yourEmail}">-->
                     <input type="hidden" name="_method" value="put">
                     <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
                 </form>

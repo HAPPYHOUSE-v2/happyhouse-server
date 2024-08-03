@@ -44,7 +44,7 @@ public class SpringSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/member/register", "/member/login",
                                 "/member/refresh", "/member/duplicateNickname",
-                                "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
+                                "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout", "/post/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/post").permitAll()
                         .requestMatchers(HttpMethod.POST, "/post").authenticated()
                         .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
