@@ -169,7 +169,7 @@ public class UserController {
                     return ResponseEntity.ok(Map.of("isLoggedIn", true, "email", email, "nickname", nickname, "role", role));
                 }
             } catch (ExpiredJwtException e) {
-                log.info("토큰 만료: {}", e.getMessage());
+                log.info("UserController 토큰 만료: {}", e.getMessage());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("isLoggedIn", false, "error", "Token expired", "shouldRefresh", true));
             } catch (JwtException e) {

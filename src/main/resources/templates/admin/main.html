@@ -13,8 +13,8 @@
   <h1 class="mb-4">관리자 페이지</h1>
   <!--메뉴-->
   <nav class="nav nav-tabs mb-4">
-    <a class="nav-link" th:classappend="${selectedMenu == 'all'} ? 'active'" th:href="@{/admin/posts(menu='all')}">전체 글 목록</a>
-    <a class="nav-link" th:classappend="${selectedMenu == 'notice'} ? 'active'" th:href="@{/admin/posts(menu='notice')}">공지 글 목록</a>
+    <a class="nav-link" th:classappend="${selectedMenu == 'all'} ? 'active'" th:href="@{/admin(menu='all')}">전체 글 목록</a>
+    <a class="nav-link" th:classappend="${selectedMenu == 'notice'} ? 'active'" th:href="@{/admin(menu='notice')}">공지 글 목록</a>
   </nav>
   <!--메뉴에 따른 콘텐츠-->
   <section th:if="${selectedMenu == 'all'}">
