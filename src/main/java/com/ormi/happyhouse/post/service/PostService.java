@@ -153,7 +153,7 @@ public class PostService {
                     .users(post.getUsers())
                     .build();
             postRepository.save(deletedPost);
-        }
+        } throw new IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.");
     }
 
 
@@ -164,10 +164,10 @@ public class PostService {
             try {
                 if (jwtUtil.validateToken(token)) {
                     String email = jwtUtil.getEmailFromToken(token);
-                    Optional<Users> userByPost = usersRepository.findById(postId);
-                    Users user = userByPost.orElseThrow(() -> new RuntimeException("User Not Found"));
+                    Optional<Post> postById = postRepository.findById(postId);
+                    Post post = postById.orElseThrow(() -> new RuntimeException("User Not Found"));
 
-                    return email.equals(user.getEmail());
+                    return email.equals(post.getUsers().getEmail());
                 }
             } catch (ExpiredJwtException e) {
                 log.info("토큰 만료: {}", e.getMessage());

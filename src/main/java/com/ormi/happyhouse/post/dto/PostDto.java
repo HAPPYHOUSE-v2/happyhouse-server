@@ -20,8 +20,6 @@ public class PostDto {
 
     private Long postId;
 
-    private Long userId;
-
     private String title;
 
     private String content;
@@ -44,7 +42,6 @@ public class PostDto {
 
     public Post toEntity() {
         return new Post().builder()
-//                .userId(this.getUserId())
                 .title(this.getTitle())
                 .content(this.getContent())
                 .viewCount(this.getViewCount())
@@ -61,7 +58,6 @@ public class PostDto {
     public static PostDto fromEntity(Post post) {
         PostDto postDto = new PostDto();
         postDto.setPostId(post.getPostId());
-//        postDto.setUserId(post.getUserId());
         postDto.setTitle(post.getTitle());
         postDto.setContent(post.getContent());
         postDto.setViewCount(post.getViewCount());
