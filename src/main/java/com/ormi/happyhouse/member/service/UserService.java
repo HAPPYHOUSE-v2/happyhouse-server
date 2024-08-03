@@ -109,6 +109,7 @@ public class UserService implements UserDetailsService {
     public LoginResponseDto loginWithJwt(String email, String password){
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         try{
+            //email을 통해 User를 찾아서 해당 유저의 Role을 찾아 토큰에 저장
             Users user = usersRepository.findByEmail(email)
                     .orElseThrow(() -> new UsernameNotFoundException("해당 유저를 찾을 수 없습니다: " + email));
             if(user.getStatus()==2){
@@ -116,8 +117,11 @@ public class UserService implements UserDetailsService {
             }
             UserDetails userDetails = loadUserByUsername(email);
             if(passwordEncoder.matches(password, userDetails.getPassword())){
-                String accessToken = jwtUtil.generateAccessToken(email);
-                String refreshToken = jwtUtil.generateRefreshToken(email);
+                //권한
+                String role = user.getRole().name();
+                String accessToken = jwtUtil.generateAccessToken(email, role);
+                String refreshToken = jwtUtil.generateRefreshToken(email, role);
+                log.info("ROLE :{}", role);
                 log.info("액세스ㅌ 토큰 확인 {}", accessToken);
                 log.info("리프레시 토큰 확인 {}", refreshToken);
                 //Refresh Token을 쿠키에 저장
@@ -156,8 +160,12 @@ public class UserService implements UserDetailsService {
     public LoginResponseDto refreshToken(String email, String refreshToken) {
         String storedRefreshToken = refreshTokenService.getRefreshToken(email);
         if (storedRefreshToken != null && storedRefreshToken.equals(refreshToken)) {
-            String newAccessToken = jwtUtil.generateAccessToken(email);
-            String newRefreshToken = jwtUtil.generateRefreshToken(email);
+            //권한
+            Users user = usersRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+            String role = user.getRole().name();
+            String newAccessToken = jwtUtil.generateAccessToken(email, role);
+            String newRefreshToken = jwtUtil.generateRefreshToken(email, role);
 
             // 새로운 Refresh 토큰을 Redis에 저장
             refreshTokenService.saveRefreshToken(email, newRefreshToken);
