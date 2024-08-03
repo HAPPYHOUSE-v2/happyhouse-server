@@ -43,6 +43,23 @@ public class MypageController {
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("토큰이 만료되었습니다.");
         }
+        /*log.info("/userinfo header :{}", authHeader);
+        if(authHeader != null && authHeader.startsWith("Bearer ")){
+            try {
+                String token = authHeader.replace("Bearer ", "");
+                if (jwtUtil.validateToken(token)) {
+                    String email = jwtUtil.getEmailFromToken(token);
+                    UserDto userInfo = UserDto.builder().nickname(userService.findNicknameByEmail(email)).build();
+                    return ResponseEntity.ok(userInfo);
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+                }
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token validation failed");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization header is missing or invalid");
+        }*/
     }
     //개인정보 수정
     @PutMapping ("/modifyInfo")
