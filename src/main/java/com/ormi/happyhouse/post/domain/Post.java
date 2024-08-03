@@ -20,6 +20,9 @@ public class Post {
     @Column(name = "post_id")
     private Long postId;
 
+//    @Column(name = "user_id", nullable = false, insertable = false, updatable = false)
+//    private Long userId;
+
     @Column(nullable = false)
     private String title;
 
