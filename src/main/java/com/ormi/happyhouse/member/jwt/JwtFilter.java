@@ -8,6 +8,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -45,7 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try{
             if (accessToken != null && jwtUtil.validateToken(accessToken)) {
-                processToken(accessToken);
+                processToken(accessToken, request);
             } else if (refreshToken != null && jwtUtil.validateToken(refreshToken)) {
                 // Access Token이 유효하지 않고 Refresh Token이 유효한 경우
                 // 새로운 Access Token을 발급하고 응답 헤더에 추가
@@ -53,16 +54,21 @@ public class JwtFilter extends OncePerRequestFilter {
                 String role = jwtUtil.getRoleFromToken(refreshToken); //권한 추가
                 String newAccessToken = jwtUtil.generateAccessToken(email, role); //권한 추가
                 response.setHeader("Authorization", "Bearer " + newAccessToken);
-                processToken(newAccessToken);
+                processToken(newAccessToken, request);
             }else{ //액세스 토큰 없거나 리프레시 토큰 유효하지 않은 경우 401
-                //response.sendRedirect("/error/401");
                 handleAuthenticationException(response, "인증이 필요");
                 return;
             }
             filterChain.doFilter(request, response);
-        }catch (ExpiredJwtException e) {
+        } catch (AccessDeniedException e) {
+            response.sendRedirect("/error/403");
+
+        } catch (ExpiredJwtException e) {
             // 토큰 만료 예외 처리
-            handleTokenExpiration(response, refreshToken);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Token expired\", \"shouldRefresh\": true}");
+            return;
         } catch (Exception e){
             //response.sendRedirect("/error/401");
             handleAuthenticationException(response, "인증 처리 중 오류 발생");
@@ -89,7 +95,7 @@ public class JwtFilter extends OncePerRequestFilter {
         response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 
-    private void processToken(String token) {
+    private void processToken(String token, HttpServletRequest request) throws AccessDeniedException {
         String email = jwtUtil.getEmailFromToken(token);
         String role = jwtUtil.getRoleFromToken(token); // 권한
         UserDetails userDetails = userService.loadUserByUsername(email);
@@ -99,11 +105,19 @@ public class JwtFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role)));
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        // 관리자 페이지에 대한 접근 권한 검사
+        if (request.getRequestURI().startsWith("/admin") && !role.equals("ADMIN")) {
+            throw new AccessDeniedException("Access is denied");
+        }
     }
 
     // 공개 접근 경로인지 확인하는 메소드
     private boolean isPublicPath(String path, String method) {
         if(path.equals("/post") && method.equalsIgnoreCase("GET")){
+            return true;
+        }
+        //로고 이미지 등 모든 유저 볼 수 있게 처리(없으면 로그아웃일 때 401에러)
+        if (path.startsWith("/image/") || path.startsWith("/static/")) {
             return true;
         }
         return path.equals("/member/register") ||

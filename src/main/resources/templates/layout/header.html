@@ -43,8 +43,11 @@
         function checkAuthStatus() {
             const token = localStorage.getItem('accessToken');
             if(token) {
+                //console.log('checkAuthStatus()', token);
+                //alert('checkAuthStatus() 호출');
                 sendAuthenticatedRequest('/member/check-auth', 'GET')
                     .then(data => {
+                        console.log('sendAuthenticatedRequest(check-auth) 성공 :', data);
                         if (data.isLoggedIn) { //로그인 상태
                             updateUIForLoggedInUser(data.nickname);
                         } else { //로그인 안 된 상태
@@ -52,9 +55,13 @@
                         }
                     })
                     .catch(error => {
-                        console.error('인증 상태 확인 중 오류 발생:', error);
+                        console.error('sendAuthenticatedRequest(check-auth) 오류 :', error);
+                        alert(error);
                         if (error.message === 'Unauthorized') {
                             localStorage.removeItem('accessToken'); // 수정: Unauthorized 에러 시 토큰 제거
+                        }else if(error.message === 'Access Denied'){
+                            console.log('checkAuthStatus() :403')
+                            alert("checkAuthStatus() 403");
                         }
                         showLoginRegisterLinks();
                     });
@@ -74,12 +81,17 @@
                 body: JSON.stringify(body),
                 credentials: 'include'
             }).then(response => {
+                //console.log('sendAuthenticatedRequest response', response);
                 if (response.status === 401) {
                     // 액세스 토큰이 만료된 경우, 리프레시 토큰으로 갱신
                     return refreshAccessToken().then(() => {
+                        //console.log('refreshAccessToken() 반환');
                         // 새 액세스 토큰으로 원래 요청 재시도
                         return sendAuthenticatedRequest(url, method, body);
                     });
+                }else if(response.status === 403){
+                    console.log('sendAuthenticatedRequest() :403')
+                    //alert("sendAuthenticatedRequest 403");
                 }
                 return response.json();
             });
@@ -100,79 +112,7 @@
                 }
             });
         }
-        /*
-       //액세스 토큰으로 인증 확인
-        function sendAuthenticatedRequest(url, method, body) {
-            const token = localStorage.getItem('accessToken');
-            return fetch(url, {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body),
-                credentials: 'include'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else if (response.status === 403) {
-                        window.location.href = '/error/403';
-                        throw new Error('Forbidden');
-                    } else if (response.status === 401) {
-                        console.log("401 에러 발생, 토큰 갱신 시도");
-                        return refreshToken().then(newToken => {
-                            if (newToken) {
-                                console.log("새 토큰 받음, 요청 재시도");
-                                localStorage.setItem('accessToken', newToken); // 수정: 새 토큰 저장
-                                return sendAuthenticatedRequest(url, method, body);
-                            } else {
-                                console.log("토큰 갱신 실패");
-                                localStorage.removeItem('accessToken'); // 수정: 토큰 제거
-                                window.location.href = '/member/login'; // 수정: 로그인 페이지로 리다이렉트
-                                throw new Error('Unauthorized');
-                            }
-                        });
-                    } else {
-                        throw new Error('Request failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    if (error.message === 'Unauthorized') {
-                        localStorage.removeItem('accessToken'); // 수정: Unauthorized 에러 시 토큰 제거
-                        window.location.href = '/member/login'; // 수정: 로그인 페이지로 리다이렉트
-                    } else if (error.message !== 'Forbidden') {
-                        showErrorMessage(error.message);
-                    }
-                    throw error;
-                });
-        }
-        function refreshToken() {
-            console.log("refreshToken 함수 호출");
-            return fetch('/member/refresh', {
-                method: 'POST',
-                credentials: 'include'
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('Refresh failed');
-                })
-                .then(data => {
-                    console.log("새 액세스 토큰 받음:", data.accessToken);
-                    localStorage.setItem('accessToken', data.accessToken);
-                    return data.accessToken;
-                })
-                .catch(error => {
-                    console.error('토큰 갱신 중 오류 발생:', error);
-                    localStorage.removeItem('accessToken');
-                    showLoginRegisterLinks();
-                    throw error; // 에러를 다시 던져서 호출자가 처리할 수 있게 함
-                });
-        }
-        */
+
         //로그인될 경우 생성
         function updateUIForLoggedInUser(nickname) {
             //권한

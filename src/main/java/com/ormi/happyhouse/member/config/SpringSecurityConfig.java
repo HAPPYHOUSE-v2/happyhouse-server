@@ -57,17 +57,16 @@ public class SpringSecurityConfig {
                 )
                 .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가
                 .exceptionHandling(exceptions -> exceptions
-                                /*.authenticationEntryPoint((request, response, authException) -> {
-                                    response.sendRedirect("/error/401");
-                                })
-                                .accessDeniedHandler((request, response, accessDeniedException) -> {
-                                    response.sendRedirect("/error/403");
-                                })*/
+                        //해당 오류 코드와 메시지를 HTTP 응답으로 직접 클라이언트에게 전송
                         .authenticationEntryPoint((request, response, authException) -> { //인증 실패 시 401
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                            //추가
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> { //접근 거부 시 403
-                            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Access Denied");
+                            response.sendRedirect("/error/403");
                         })
                 )
                 .formLogin(form -> form.disable())

@@ -21,13 +21,4 @@ public class AdminController {
         model.addAttribute("selectedMenu", menu);
         return "admin/main";
     }
-    //Admin 전체 게시글 목록 조회
-
-    //공지 게시글 조회
-
-    //공지 게시글 등록
-
-    //공지 게시글 수정
-
-    //공지 게시글 상세 조회
 }
