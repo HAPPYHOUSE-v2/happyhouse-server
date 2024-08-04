@@ -33,10 +33,11 @@ public class CommentController {
         log.info("/comment/{post_id} POST 요청");
         try{
             commentService.saveComment(postId, content, authHeader);
-            URI redirectUri = new URI("/post/" + postId);
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.setLocation(redirectUri);
-            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
+//            URI redirectUri = new URI("/post/" + postId);
+//            HttpHeaders httpHeaders = new HttpHeaders();
+//            httpHeaders.setLocation(redirectUri);
+//            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
+            return ResponseEntity.status(HttpStatus.OK).location(URI.create("/post/" + postId)).build();
         }catch (Exception e){
             log.error("댓글 저장 중 에러",e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("댓글 저장 중 에러 :"+e.getMessage());
