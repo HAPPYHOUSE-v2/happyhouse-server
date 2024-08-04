@@ -17,7 +17,7 @@
 
     <script>
 
-        // 상세 게시글 조회 GET 메서드에 Authorization 헤더 담기
+        // 상세 게시글 조회: GET 메서드에 Authorization 헤더 담기
             function addTokenToRequest(event) {
                 event.preventDefault(); // 기본 폼 제출 막기
 
@@ -35,7 +35,7 @@
                         if (response.ok) {
                             return response.text();
                         } else {
-                            throw new Error('요청에 실패했습니다.');
+                            throw new Error('로그인이 필요합니다.');
                         }
                     })
                     .then(html => {
@@ -54,7 +54,11 @@
                     });
             }
 
+
+
     </script>
+
+
 </head>
 <body>
 <!-- 헤더 포함 -->
@@ -66,7 +70,11 @@
         <a th:href="@{/post}" class="text-decoration-none text-dark">
             <h1>커뮤니티</h1>
         </a>
-        <a th:href="@{/post/form}" class="btn btn-primary">게시글 작성</a>
+        <form th:action="@{/post/form}" method="get" onsubmit="addTokenToRequest(event)">
+            <input type="hidden" id="formTokenInput" name="accessToken" value="">
+            <button type="submit" class="btn btn-primary"> 게시글 작성 </button>
+        </form>
+<!--        <a href="#" onclick="checkAuthAndRedirect('/post/form')" class="btn btn-primary">게시글 작성</a>-->
     </div>
     <form th:action="@{/post}" method="get" class="search-form d-flex">
         <label for="searchByTitle"></label>
@@ -92,7 +100,6 @@
             <td>
                 <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="get" onsubmit="addTokenToRequest(event)">
                     <input type="hidden" id="tokenInput" name="accessToken" value="">
-<!--                    <input type="hidden" id="query" name="" th:value="${post.postId}">-->
                     <button type="submit" th:text="${post.title}" class="btn"></button>
                 </form>
             </td>
