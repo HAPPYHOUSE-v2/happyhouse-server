@@ -112,9 +112,12 @@
             const formData = new FormData(updatedForm); // 등록 form
             const token = localStorage.getItem('accessToken'); // 토큰
 
+            console.log(token);
+            alert('수정 버튼 클릭');
+
             // 서버에 요청
             fetch(updatedForm.action, {
-                method: 'POST',
+                method: 'PUT',
                 headers: { // Request Header
                     'Authorization': 'Bearer ' + token
                 },

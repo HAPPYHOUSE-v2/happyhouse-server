@@ -17,67 +17,67 @@
 
     <script>
 
-        // // 상세 게시글 조회 GET 메서드에 Authorization 헤더 담기
-        //     function addTokenToRequest(event) {
-        //         event.preventDefault(); // 기본 폼 제출 막기
-        //
-        //         const form = event.target;
-        //         const token = localStorage.getItem('accessToken'); // 토큰 가져오기
-        //         // const query = document.getElementById('query').value; // 쿼리 값 가져오기
-        //         // const actionUrl = form.action + '?query=' + encodeURIComponent(query);
-        //
-        //         // 서버에 GET 요청 보내기
-        //         fetch(form.action, {
-        //             method: 'GET',
-        //             headers: {
-        //                 'Authorization': 'Bearer ' + token
-        //             }
-        //         })
-        //             .then(response => {
-        //                 if (response.ok) {
-        //                     return response.text();
-        //                 } else {
-        //                     throw new Error('요청에 실패했습니다.');
-        //                 }
-        //             })
-        //             .then(html => {
-        //                 // 서버로부터 반환된 HTML을 DOM에 삽입하여 업데이트
-        //                 document.open();
-        //                 document.write(html);
-        //                 document.close();
-        //
-        //                 // URL을 업데이트
-        //                 const url = new URL(form.action);
-        //                 window.history.pushState({}, '', url.pathname);
-        //             })
-        //             .catch(error => {
-        //                 console.error('Error:', error);
-        //                 alert(error.message);
-        //             });
-        //     }
+        // 상세 게시글 조회 GET 메서드에 Authorization 헤더 담기
+            function addTokenToRequest(event) {
+                event.preventDefault(); // 기본 폼 제출 막기
 
+                const form = event.target;
+                const token = localStorage.getItem('accessToken'); // 토큰 가져오기
+                // const query = document.getElementById('query').value; // 쿼리 값 가져오기
+                // const actionUrl = form.action + '?query=' + encodeURIComponent(query);
 
-        // 페이지 로드 시 토큰 설정
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('accessToken'); // 토큰 가져오기
-            if (token) {
-                document.getElementById('tokenInput').value = token;
+                // 서버에 GET 요청 보내기
+                fetch(form.action, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.text();
+                        } else {
+                            throw new Error('요청에 실패했습니다.');
+                        }
+                    })
+                    .then(html => {
+                        // 서버로부터 반환된 HTML을 DOM에 삽입하여 업데이트
+                        document.open();
+                        document.write(html);
+                        document.close();
+
+                        // URL을 업데이트
+                        const url = new URL(form.action);
+                        window.history.pushState({}, '', url.pathname);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message);
+                    });
             }
-        });
 
-        function addTokenToUrl(event) {
-            event.preventDefault(); // 기본 폼 제출 막기-->
 
-            const form = event.target;
-            const token = document.getElementById('tokenInput').value; // 토큰 값 가져오기
-            const actionUrl = form.action;
-
-            // URL에 토큰 추가
-            const urlWithToken = `${actionUrl}?accessToken=${encodeURIComponent(token)}`;
-
-            // GET 요청 보내기
-            window.location.href = urlWithToken;
-        }
+        // // 페이지 로드 시 토큰 설정
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     const token = localStorage.getItem('accessToken'); // 토큰 가져오기
+        //     if (token) {
+        //         document.getElementById('tokenInput').value = token;
+        //     }
+        // });
+        //
+        // function addTokenToUrl(event) {
+        //     event.preventDefault(); // 기본 폼 제출 막기-->
+        //
+        //     const form = event.target;
+        //     const token = document.getElementById('tokenInput').value; // 토큰 값 가져오기
+        //     const actionUrl = form.action;
+        //
+        //     // URL에 토큰 추가
+        //     const urlWithToken = `${actionUrl}?accessToken=${encodeURIComponent(token)}`;
+        //
+        //     // GET 요청 보내기
+        //     window.location.href = urlWithToken;
+        // }
 
     </script>
 </head>
@@ -115,7 +115,7 @@
                 <button th:if="${post.noticeYn}">공지</button>
             </td>
             <td>
-                <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="get" onsubmit="addTokenToUrl(event)">
+                <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="get" onsubmit="addTokenToRequest(event)">
                     <input type="hidden" id="tokenInput" name="accessToken" value="">
 <!--                    <input type="hidden" id="query" name="" th:value="${post.postId}">-->
                     <button type="submit" th:text="${post.title}" class="btn"></button>

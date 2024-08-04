@@ -81,13 +81,13 @@ public class PostController {
     @GetMapping("/{post_id}")
     public String showPostDetail(
             @PathVariable("post_id") Long postId,
-//            @RequestHeader(value = "Authorization", required = false) String authHeader,
-            @RequestParam("accessToken") String accessToken,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+//            @RequestParam("accessToken") String accessToken,
             Model model
     ) {
         PostDto post = postService.showPostDetail(postId);
-        boolean isYourPost = postService.isYourPost(postId, accessToken);
-        String yourEmail = postService.yourEmail(accessToken);
+        boolean isYourPost = postService.isYourPost(postId, authHeader);
+        String yourEmail = postService.yourEmail(authHeader);
 
         model.addAttribute("post", post);
         model.addAttribute("isYourPost", isYourPost);
@@ -117,7 +117,9 @@ public class PostController {
     public String updatePost(
             @PathVariable("post_id") Long postId,
             @ModelAttribute PostDto postDto,
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            Model model
     ) throws IOException {
 
         log.info("/post/{post_id} PUT 요청");
@@ -127,11 +129,17 @@ public class PostController {
 //            HttpHeaders httpHeaders = new HttpHeaders();
 //            httpHeaders.setLocation(redirectUri);
 //            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
+            boolean isYourPost = postService.isYourPost(postId, authHeader);
+            String yourEmail = postService.yourEmail(authHeader);
+
+            model.addAttribute("isYourPost", isYourPost);
+            model.addAttribute("yourEmail", yourEmail);
+
             return "redirect:/post/" + postId; // 성공 시 200
         }catch (Exception e){
             log.error("게시글 저장 중 에러",e);
 //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
-            return "error/403";
+            return "error/401";
         }
     }
 
@@ -149,7 +157,7 @@ public class PostController {
         }catch (Exception e){
             log.error("게시글 저장 중 에러",e);
 //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
-            return "error/403";
+            return "error/401";
         }
     }
 }
