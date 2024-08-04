@@ -81,14 +81,17 @@ public class PostController {
     @GetMapping("/{post_id}")
     public String showPostDetail(
             @PathVariable("post_id") Long postId,
-            @RequestHeader(value = "Authorization", required = false) String authHeader,
+//            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam("accessToken") String accessToken,
             Model model
     ) {
         PostDto post = postService.showPostDetail(postId);
-        boolean isYourPost = postService.isYourPost(postId, authHeader);
+        boolean isYourPost = postService.isYourPost(postId, accessToken);
+        String yourEmail = postService.yourEmail(accessToken);
 
         model.addAttribute("post", post);
         model.addAttribute("isYourPost", isYourPost);
+        model.addAttribute("yourEmail", yourEmail);
         return "post/detail";
 
     }
@@ -111,7 +114,7 @@ public class PostController {
 
     // Update: 게시글 수정
     @PutMapping("/{post_id}")
-    public ResponseEntity<?> updatePost(
+    public String updatePost(
             @PathVariable("post_id") Long postId,
             @ModelAttribute PostDto postDto,
             @RequestParam("file") MultipartFile file
@@ -120,30 +123,33 @@ public class PostController {
         log.info("/post/{post_id} PUT 요청");
         try{
             postService.updatePost(postId, postDto, file);
-            URI redirectUri = new URI("/post/" + postId);
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.setLocation(redirectUri);
-            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
+//            URI redirectUri = new URI("/post/" + postId);
+//            HttpHeaders httpHeaders = new HttpHeaders();
+//            httpHeaders.setLocation(redirectUri);
+//            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
+            return "redirect:/post/" + postId; // 성공 시 200
         }catch (Exception e){
             log.error("게시글 저장 중 에러",e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
+            return "error/403";
         }
     }
 
     // Delete: 게시글 삭제
     @PutMapping("/delete/{post_id}")
-    public ResponseEntity<?> deletePost(
-            @PathVariable("post_id") Long postId,
+    public String deletePost(
+            @PathVariable("post_id") Long postId, 
             @RequestHeader(value = "Authorization", required = false) String authHeader
     ) {
 
         log.info("/delete/{post_id} PUT 요청");
         try{
             postService.deletePost(postId, authHeader);
-            return ResponseEntity.ok().build(); // 성공 시 200
+            return "redirect:/post/" + postId; // 성공 시 200
         }catch (Exception e){
             log.error("게시글 저장 중 에러",e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
+            return "error/403";
         }
     }
 }

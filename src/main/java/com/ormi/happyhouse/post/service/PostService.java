@@ -153,17 +153,17 @@ public class PostService {
                     .users(post.getUsers())
                     .build();
             postRepository.save(deletedPost);
-        } throw new IllegalArgumentException("본인이 작성한 게시글만 삭제할 수 있습니다.");
+        }
     }
 
 
     // 토큰의 user 값과 해당 포스트의 user값이 같은지 확인
-    public boolean isYourPost(Long postId, String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
+    public boolean isYourPost(Long postId, String accessToken) {
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            String token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
             try {
-                if (jwtUtil.validateToken(token)) {
-                    String email = jwtUtil.getEmailFromToken(token);
+                if (jwtUtil.validateToken(accessToken)) {
+                    String email = jwtUtil.getEmailFromToken(accessToken);
                     Optional<Post> postById = postRepository.findById(postId);
                     Post post = postById.orElseThrow(() -> new RuntimeException("User Not Found"));
 
@@ -175,9 +175,27 @@ public class PostService {
             } catch (JwtException e) {
                 log.info("잘못된 토큰: {}", e.getMessage());
 
-            }
+            } return false;
 
-        }
-        return false;
+//        }
+//        return false;
+    }
+
+    // 토큰에 해당하는 이메일 반환
+    public String yourEmail(String accessToken) {
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            String token = authHeader.substring(7); // "Bearer " 이후의 토큰 추출
+            try {
+                if (jwtUtil.validateToken(accessToken)) {
+                    return jwtUtil.getEmailFromToken(accessToken);
+                }
+            } catch (ExpiredJwtException e) {
+                log.info("토큰 만료: {}", e.getMessage());
+
+            } catch (JwtException e) {
+                log.info("잘못된 토큰: {}", e.getMessage());
+
+            } return "";
+//        } throw new IllegalArgumentException("잘못된 토큰입니다.");
     }
 }
