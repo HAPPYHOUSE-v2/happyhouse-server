@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="shortcut icon" href="#">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <title>게시글 작성</title>
 </head>
@@ -41,7 +41,12 @@
 
     <!-- 수정시 작성페이지 -->
     <article class="write" th:if="${isEdit}">
-        <form id="postEditForm" th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="post" enctype="multipart/form-data" class="border p-4 rounded">
+        <form id="postEditForm"
+              th:action="@{/post/{post_id}(post_id = ${post.postId})}"
+              th:data-post-id="${post.postId}"
+              method="post"
+              enctype="multipart/form-data"
+              class="border p-4 rounded">
             <input type="hidden" name="_method" value="put">
             <div class="mb-3">
                 <label for="title" class="form-label">제목</label>
@@ -64,7 +69,8 @@
                 <input type="file" id="newEditFile" name="file" accept="image/*" class="form-control">
             </div>
             <div class="d-flex justify-content-between">
-                <a th:href="@{/post/{post_id}(post_id = ${post.postId})}" class="btn btn-secondary">수정취소</a>
+               <!-- <a th:href="@{/post/{post_id}(post_id = ${post.postId})}" class="btn btn-secondary">수정취소</a>-->
+                <button type="button" class="btn btn-secondary" onclick="goBack()">수정취소</button>
                 <button type="submit" class="btn btn-primary">수정완료</button>
             </div>
         </form>
@@ -72,70 +78,117 @@
 </div>
 
 <script>
+    //수정 취소
+    function goBack() {
+        const postId = document.getElementById('postEditForm').getAttribute('data-post-id');
+        const token = localStorage.getItem('accessToken');
+
+        fetch('/post/' + postId, {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(response => response.text())
+            .then(html => {
+                document.open();
+                document.write(html);
+                document.close();
+                history.pushState(null, '', '/post/' + postId);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('페이지 로드에 실패했습니다.');
+            });
+    }
+
+
     // 게시글 작성
     document.addEventListener('DOMContentLoaded', function() {
         const createForm = document.getElementById('postForm');
-        createForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // 기본 이벤트 막음
+        if(createForm) {
+            createForm.addEventListener('submit', function (e) {
+                e.preventDefault(); // 기본 이벤트 막음
 
-            const formData = new FormData(createForm); // 등록 form
-            const token = localStorage.getItem('accessToken'); // 토큰
+                const formData = new FormData(createForm); // 등록 form
+                const token = localStorage.getItem('accessToken'); // 토큰
 
-            // 서버에 요청
-            fetch(createForm.action, {
-                method: 'POST',
-                headers: { // Request Header
-                    'Authorization': 'Bearer ' + token
-                },
-                body: formData // Request Body (제목, 내용, 등)
-            })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = '/post';  // 성공 시 리다이렉트
-                    } else {
-                        throw new Error('게시글 작성에 실패했습니다.'); // catch로 들어감
-                    }
+                // 서버에 요청
+                fetch(createForm.action, {
+                    method: 'POST',
+                    headers: { // Request Header
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: formData // Request Body (제목, 내용, 등)
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(error.message);
-                });
-        });
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = '/post';  // 성공 시 리다이렉트
+                        } else {
+                            throw new Error('게시글 작성에 실패했습니다.'); // catch로 들어감
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message);
+                    });
+            });
+        }
 
-
-    // 게시글 수정
-
+        // 게시글 수정
         const updatedForm = document.getElementById('postEditForm');
-        updatedForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // 기본 이벤트 막음
+        if(updatedForm) {
 
-            const formData = new FormData(updatedForm); // 등록 form
-            const token = localStorage.getItem('accessToken'); // 토큰
+            updatedForm.addEventListener('submit', function (e) {
+                e.preventDefault(); // 기본 이벤트 막음
 
-            console.log(token);
-            alert('수정 버튼 클릭');
+                const formData = new FormData(updatedForm); // 등록 form
+                const token = localStorage.getItem('accessToken'); // 토큰
+                const postId = updatedForm.getAttribute('data-post-id');
 
-            // 서버에 요청
-            fetch(updatedForm.action, {
-                method: 'PUT',
-                headers: { // Request Header
-                    'Authorization': 'Bearer ' + token
-                },
-                body: formData // Request Body (제목, 내용, 등)
-            })
-                .then(response => {
-                    if (response.ok) {
-                        return response;// 성공 시 컨트롤러에서 리다이렉트
-                    } else {
-                        throw new Error('게시글 수정에 실패했습니다.'); // catch로 들어감
-                    }
+                console.log('update token', token);
+                //alert('update token');
+
+                // 서버에 요청
+                fetch(updatedForm.action, {
+                    method: 'PUT',
+                    headers: { // Request Header
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: formData // Request Body (제목, 내용, 등)
                 })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(error.message);
-                });
-        });
+                    .then(response => {
+                        if (response.ok) {
+                            const token = localStorage.getItem('accessToken');
+                            fetch('/post/' + postId, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': 'Bearer ' + token
+                                }
+                            })
+                                .then(response => response.text())
+                                .then(html => {
+                                    document.open();
+                                    document.write(html);
+                                    document.close();
+                                    history.pushState(null, '', '/post/' + postId);
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('페이지 로드에 실패했습니다.');
+                                });
+                        } else {
+                            throw new Error('게시글 수정에 실패했습니다.'); // catch로 들어감
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message);
+                    });
+            });
+        }
     });
+
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.net.URI;
@@ -85,6 +86,8 @@ public class PostController {
 //            @RequestParam("accessToken") String accessToken,
             Model model
     ) {
+        log.info("상세 조회");
+
         PostDto post = postService.showPostDetail(postId);
         boolean isYourPost = postService.isYourPost(postId, authHeader);
         String yourEmail = postService.yourEmail(authHeader);
@@ -114,13 +117,12 @@ public class PostController {
 
     // Update: 게시글 수정
     @PutMapping("/{post_id}")
-    public String updatePost(
+    public ResponseEntity<?> updatePost(
             @PathVariable("post_id") Long postId,
             @ModelAttribute PostDto postDto,
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-            Model model
-    ) throws IOException {
+            Model model) throws IOException {
 
         log.info("/post/{post_id} PUT 요청");
         try{
@@ -134,12 +136,13 @@ public class PostController {
 
             model.addAttribute("isYourPost", isYourPost);
             model.addAttribute("yourEmail", yourEmail);
-
-            return "redirect:/post/" + postId; // 성공 시 200
+            return ResponseEntity.status(HttpStatus.OK).location(URI.create("/post/" + postId)).build(); //성공 시 200
+            //return ResponseEntity.ok().build(); //성공 시 200
+            //return "redirect:/post/" + postId; // 성공 시 200
         }catch (Exception e){
-            log.error("게시글 저장 중 에러",e);
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 저장 중 에러 :"+e.getMessage());
-            return "error/401";
+            log.error("게시글 수정 중 에러",e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 수정 중 에러 :"+e.getMessage());
+            //return "error/401";
         }
     }
 
