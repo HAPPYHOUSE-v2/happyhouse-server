@@ -23,8 +23,6 @@
 
                 const form = event.target;
                 const token = localStorage.getItem('accessToken'); // 토큰 가져오기
-                // const query = document.getElementById('query').value; // 쿼리 값 가져오기
-                // const actionUrl = form.action + '?query=' + encodeURIComponent(query);
 
                 // 서버에 GET 요청 보내기
                 fetch(form.action, {
@@ -55,29 +53,6 @@
                         alert(error.message);
                     });
             }
-
-
-        // // 페이지 로드 시 토큰 설정
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     const token = localStorage.getItem('accessToken'); // 토큰 가져오기
-        //     if (token) {
-        //         document.getElementById('tokenInput').value = token;
-        //     }
-        // });
-        //
-        // function addTokenToUrl(event) {
-        //     event.preventDefault(); // 기본 폼 제출 막기-->
-        //
-        //     const form = event.target;
-        //     const token = document.getElementById('tokenInput').value; // 토큰 값 가져오기
-        //     const actionUrl = form.action;
-        //
-        //     // URL에 토큰 추가
-        //     const urlWithToken = `${actionUrl}?accessToken=${encodeURIComponent(token)}`;
-        //
-        //     // GET 요청 보내기
-        //     window.location.href = urlWithToken;
-        // }
 
     </script>
 </head>

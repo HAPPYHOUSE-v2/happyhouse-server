@@ -83,7 +83,6 @@ public class PostController {
     public String showPostDetail(
             @PathVariable("post_id") Long postId,
             @RequestHeader(value = "Authorization", required = false) String authHeader,
-//            @RequestParam("accessToken") String accessToken,
             Model model
     ) {
         log.info("상세 조회");
