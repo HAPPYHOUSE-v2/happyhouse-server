@@ -9,6 +9,7 @@
         .notice-row {
             background-color: #f8d7da; /* 공지 row 배경색 */
         }
+
         .search-form {
             max-width: 600px;
             margin: auto;
@@ -18,44 +19,41 @@
     <script>
 
         // 상세 게시글 조회: GET 메서드에 Authorization 헤더 담기
-            function addTokenToRequest(event) {
-                event.preventDefault(); // 기본 폼 제출 막기
+        function addTokenToRequest(event) {
+            event.preventDefault(); // 기본 폼 제출 막기
 
-                const form = event.target;
-                const token = localStorage.getItem('accessToken'); // 토큰 가져오기
+            const form = event.target;
+            const token = localStorage.getItem('accessToken'); // 토큰 가져오기
 
-                // 서버에 GET 요청 보내기
-                fetch(form.action, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + token
+            // 서버에 GET 요청 보내기
+            fetch(form.action, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.text();
+                    } else {
+                        throw new Error('로그인이 필요합니다.');
                     }
                 })
-                    .then(response => {
-                        if (response.ok) {
-                            return response.text();
-                        } else {
-                            throw new Error('로그인이 필요합니다.');
-                        }
-                    })
-                    .then(html => {
-                        // 서버로부터 반환된 HTML을 DOM에 삽입하여 업데이트
-                        document.open();
-                        document.write(html);
-                        document.close();
+                .then(html => {
+                    // 서버로부터 반환된 HTML을 DOM에 삽입하여 업데이트
+                    document.open();
+                    document.write(html);
+                    document.close();
 
-                        // URL을 업데이트
-                        const url = new URL(form.action);
-                        window.history.pushState({}, '', url.pathname);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert(error.message);
-                    });
-            }
-
-
-
+                    // URL을 업데이트
+                    const url = new URL(form.action);
+                    window.history.pushState({}, '', url.pathname);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        }
     </script>
 
 
@@ -72,13 +70,13 @@
         </a>
         <form th:action="@{/post/form}" method="get" onsubmit="addTokenToRequest(event)">
             <input type="hidden" id="formTokenInput" name="accessToken" value="">
-            <button type="submit" class="btn btn-primary"> 게시글 작성 </button>
+            <button type="submit" class="btn btn-primary"> 게시글 작성</button>
         </form>
-<!--        <a href="#" onclick="checkAuthAndRedirect('/post/form')" class="btn btn-primary">게시글 작성</a>-->
+        <!--        <a href="#" onclick="checkAuthAndRedirect('/post/form')" class="btn btn-primary">게시글 작성</a>-->
     </div>
     <form th:action="@{/post}" method="get" class="search-form d-flex">
         <label for="searchByTitle"></label>
-        <input type="text" id="searchByTitle" name="title" placeholder="검색어를 입력해주세요" class="form-control me-2" />
+        <input type="text" id="searchByTitle" name="title" placeholder="검색어를 입력해주세요" class="form-control me-2"/>
         <button type="submit" class="btn btn-outline-secondary">검색</button>
     </form>
 
@@ -98,7 +96,8 @@
                 <button th:if="${post.noticeYn}">공지</button>
             </td>
             <td>
-                <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="get" onsubmit="addTokenToRequest(event)">
+                <form th:action="@{/post/{post_id}(post_id = ${post.postId})}" method="get"
+                      onsubmit="addTokenToRequest(event)">
                     <input type="hidden" id="tokenInput" name="accessToken" value="">
                     <button type="submit" th:text="${post.title}" class="btn"></button>
                 </form>
@@ -118,12 +117,14 @@
             </li>
             <!--5개 단위로 페이지 이동-->
             <li class="page-item">
-                <a class="page-link" th:href="@{/post(title=${searchTitle}, page=${(nowPage > 5) ? (nowPage - 6) : (nowPage - 1)})}"><</a>
+                <a class="page-link"
+                   th:href="@{/post(title=${searchTitle}, page=${(nowPage > 5) ? (nowPage - 6) : (nowPage - 1)})}"><</a>
             </li>
             <th:block th:each="page : ${#numbers.sequence(startPage, endPage)}">
                 <!--현재 페이지와 다른 페이지를 클릭시 해당 페이지로 넘어감-->
                 <li class="page-item" th:if="${page != nowPage}">
-                    <a class="page-link" th:href="@{/post(title=${searchTitle}, page=${page - 1})}" th:text="${page}"></a>
+                    <a class="page-link" th:href="@{/post(title=${searchTitle}, page=${page - 1})}"
+                       th:text="${page}"></a>
                 </li>
                 <!--현재 페이지와 같은 페이지를 클릭시 변화없음-->
                 <li class="page-item active" th:if="${page == nowPage}">
@@ -132,7 +133,8 @@
             </th:block>
             <!--5개 단위로 페이지 이동-->
             <li class="page-item">
-                <a class="page-link" th:href="@{/post(title=${searchTitle}, page=${(nowPage < totalPage - 5) ? (nowPage + 4) : (nowPage - 1)})}">></a>
+                <a class="page-link"
+                   th:href="@{/post(title=${searchTitle}, page=${(nowPage < totalPage - 5) ? (nowPage + 4) : (nowPage - 1)})}">></a>
             </li>
             <!--마지막 페이지로 이동-->
             <li class="page-item">

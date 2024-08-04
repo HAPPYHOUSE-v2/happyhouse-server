@@ -11,14 +11,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.net.URI;
@@ -126,22 +124,10 @@ public class PostController {
         log.info("/post/{post_id} PUT 요청");
         try{
             postService.updatePost(postId, postDto, file);
-//            URI redirectUri = new URI("/post/" + postId);
-//            HttpHeaders httpHeaders = new HttpHeaders();
-//            httpHeaders.setLocation(redirectUri);
-//            return new ResponseEntity<>(httpHeaders, HttpStatus.FOUND); // 성공 시 302, postId값으로 리다이렉트
-            boolean isYourPost = postService.isYourPost(postId, authHeader);
-            String yourEmail = postService.yourEmail(authHeader);
-
-            model.addAttribute("isYourPost", isYourPost);
-            model.addAttribute("yourEmail", yourEmail);
             return ResponseEntity.status(HttpStatus.OK).location(URI.create("/post/" + postId)).build(); //성공 시 200
-            //return ResponseEntity.ok().build(); //성공 시 200
-            //return "redirect:/post/" + postId; // 성공 시 200
         }catch (Exception e){
             log.error("게시글 수정 중 에러",e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 수정 중 에러 :"+e.getMessage());
-            //return "error/401";
         }
     }
 
