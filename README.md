@@ -42,35 +42,58 @@ http://52.78.32.67:8089
 
 ## 🖥 기능
 
-> - 회원관리
+> - **회원관리**
 >
->   - 회원가입 & 이메일 인증
+>   - **회원가입 & 이메일 인증**
 >
 >     <img src="https://github.com/user-attachments/assets/9f809607-a109-493a-8d93-023259bb29b6" width="500" height="400" alt="회원가입 이미지">
 >     <img src="https://github.com/user-attachments/assets/6351bd2f-8a73-412e-80b8-56fe13c6c7e4" width="400" height="300" alt="이메일 인증 이미지">
 >  
->   - 로그인 & 비밀번호 초기화
+>   - **로그인 & 비밀번호 초기화**
 > 
 >     <img src="https://github.com/user-attachments/assets/7920768b-3d45-4648-9d43-785eb78c7893" width="300" height="300" alt="로그인 이미지">
 >     <img src="https://github.com/user-attachments/assets/4613a16c-4b1b-499a-b2c7-ffb2c0518705" width="400" height="300" alt="비밀번호 초기화 이미지">
 >
->   - 마이페이지 (개인정보 수정 & 회원 탈퇴)
+>   - **마이페이지 (개인정보 수정 & 회원 탈퇴)**
 >
 >     <img src="https://github.com/user-attachments/assets/2f55a230-6cc9-4f50-906d-fe5eb67e00c5" width="500" height="300" alt="개인정보 수정 이미지">
 >     <img src="https://github.com/user-attachments/assets/71438889-89c1-4349-9e15-52830f9d6920" width="500" height="300" alt="탈퇴 화면 이미지">
 > 
->   - 관리자 권한 인가 처리
+>   - **관리자 권한 인가 처리**
 > 
 >     <img src="https://github.com/user-attachments/assets/a51d62da-eba4-407a-90a8-489d009b90d3" width="500" height="300" alt="개인정보 수정 이미지">
 >     <img src="https://github.com/user-attachments/assets/4118e47c-d7c3-475a-98b7-058405d4cdfc" width="500" height="300" alt="탈퇴 화면 이미지">
 >
-> - 커뮤니티 게시판
+> - **커뮤니티 게시판**
 >
->   - 게시글 목록
->   - 검색 & 페이징
->   - 게시글 상세 조회
->   - 등록 & 수정 & 삭제
->   - 첨부파일 등록
->   - 댓글 등록 & 삭제
+>   - **게시글 목록**
+>   
+>     <img src="https://github.com/user-attachments/assets/1f814a7d-c9ab-476b-8d43-b23d276a3e0d" width="700" alt="게시글 목록 이미지">
+>
+>     
+>   - **검색 & 페이징**
+>  
+>     <img src="https://github.com/user-attachments/assets/595a6f0e-fe83-4850-8b0b-8ffa32a94df7" width="700" alt="게시글 검색 이미지">
+>     <img src="https://github.com/user-attachments/assets/557f8fce-dc44-4598-9338-25a317e4ce6d" width="700" alt="게시글 페이징 이미지">
+> 
+>   - **게시글 상세 조회**
+>
+>     <img src="https://github.com/user-attachments/assets/0732ffe2-9aa4-42c1-93d9-a46dd86a3719" width="500" alt="게시글 상세 이미지">
+>
+> 
+>   - **등록 & 수정 & 삭제**
+>
+>     <img src="https://github.com/user-attachments/assets/4a93c38a-171f-4f73-b2df-bbd026fa80e6" width="500" alt="게시글 등록 이미지">
+>     <img src="https://github.com/user-attachments/assets/c2a06c97-4332-427e-9f93-806b6aa40103" width="500" alt="게시글 삭제 이미지">
+>
+> 
+>   - **첨부파일 등록**
+>  
+>     <img src="https://github.com/user-attachments/assets/f292bec4-21d1-4195-a511-d9b7f6bb951d" width="500" alt="게시글 첨부 이미지">
+>
+> 
+>   - **댓글 등록 & 삭제**
+>
+>     <img src="https://github.com/user-attachments/assets/feaf07bc-d187-4894-b6b3-dabfd5a6af3b" width="500" alt="게시글 첨부 이미지">
 >
 
