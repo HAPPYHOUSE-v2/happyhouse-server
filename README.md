@@ -44,11 +44,25 @@ http://52.78.32.67:8089
 
 > - 회원관리
 >
->   - 회원가입
->   - 로그인
->   - 비밀번호 찾기
->   - 마이페이지
->   - 회원 정보 수정
+>   - 회원가입 & 이메일 인증
+>
+>     <img src="https://github.com/user-attachments/assets/9f809607-a109-493a-8d93-023259bb29b6" width="500" height="400" alt="회원가입 이미지">
+>     <img src="https://github.com/user-attachments/assets/6351bd2f-8a73-412e-80b8-56fe13c6c7e4" width="400" height="300" alt="이메일 인증 이미지">
+>  
+>   - 로그인 & 비밀번호 초기화
+> 
+>     <img src="https://github.com/user-attachments/assets/7920768b-3d45-4648-9d43-785eb78c7893" width="300" height="300" alt="로그인 이미지">
+>     <img src="https://github.com/user-attachments/assets/4613a16c-4b1b-499a-b2c7-ffb2c0518705" width="400" height="300" alt="비밀번호 초기화 이미지">
+>
+>   - 마이페이지 (개인정보 수정 & 회원 탈퇴)
+>
+>     <img src="https://github.com/user-attachments/assets/2f55a230-6cc9-4f50-906d-fe5eb67e00c5" width="500" height="300" alt="개인정보 수정 이미지">
+>     <img src="https://github.com/user-attachments/assets/71438889-89c1-4349-9e15-52830f9d6920" width="500" height="300" alt="탈퇴 화면 이미지">
+> 
+>   - 관리자 권한 인가 처리
+> 
+>     <img src="https://github.com/user-attachments/assets/a51d62da-eba4-407a-90a8-489d009b90d3" width="500" height="300" alt="개인정보 수정 이미지">
+>     <img src="https://github.com/user-attachments/assets/4118e47c-d7c3-475a-98b7-058405d4cdfc" width="500" height="300" alt="탈퇴 화면 이미지">
 >
 > - 커뮤니티 게시판
 >
@@ -59,6 +73,4 @@ http://52.78.32.67:8089
 >   - 첨부파일 등록
 >   - 댓글 등록 & 삭제
 >
->   - 아파트 상세 정보
-> ![image](https://user-images.githubusercontent.com/34956859/229362224-a4bd2a63-052f-450d-9290-a4ca6e1b40b1.png)
->
+
