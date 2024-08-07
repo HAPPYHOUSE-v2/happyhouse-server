@@ -120,3 +120,76 @@ http://43.201.50.190:8089
 
 ## ⚠️ 이슈 트래킹
 
+### 로그아웃 시 401 오류
+
+- 문제 상황
+
+  <img src="https://github.com/user-attachments/assets/b112a5b6-8358-403b-960f-dd3969c65bbb" width="400" height="300" alt="로그아웃 이미지 ">
+
+- 원인
+   - 로그아웃("/member/logout")이 인증한 상태(authenticated())에만 처리할 수 있었기 때문 
+  ```java
+   @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable()) //CSRF 보호 비활성화(JWT 사용)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/member/register", "/member/login",
+                                "/member/refresh", "/member/duplicateNickname",
+                                "/member/send-verification-email", "/member/verify-email", "/member/temppassword").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post", "/static/**", "/image/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/post").authenticated()
+                        .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
+                        .requestMatchers( "/member/logout", "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
+                        .requestMatchers("/admin/**").hasRole("ADMIN") //관리자 권한만
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new JwtFilter(userService, jwtUtil), UsernamePasswordAuthenticationFilter.class) //JWT필터 추가
+                .exceptionHandling(exceptions -> exceptions
+                        //해당 오류 코드와 메시지를 HTTP 응답으로 직접 클라이언트에게 전송
+                        .authenticationEntryPoint((request, response, authException) -> { //인증 실패 시 401
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                            //추가
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> { //접근 거부 시 403
+                            response.sendRedirect("/error/403");
+                        })
+                )
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable());
+
+        return http.build();
+    }
+  ```
+  
+- 해결
+   - 인증이 실패한 상황이거나 인증 상태와 관계없이 사용자가 언제든 로그아웃할 수 있어야 하기 때문에 permitAll()이 적절함
+   - 서버에서 로그아웃 처리 시 요청한 사용자의 정보를 확인하고, 해당 사용자의 Access token, Refresh Token을 무효 처리함
+   ```java
+   @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable()) //CSRF 보호 비활성화(JWT 사용)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/member/register", "/member/login",
+                                "/member/refresh", "/member/duplicateNickname",
+                                "/member/send-verification-email", "/member/verify-email", "/member/temppassword", "/member/logout").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/post", "/static/**", "/image/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/post").authenticated()
+                        .requestMatchers("/static/**", "/webjars/**", "/css/**", "/js/**", "/image/**").permitAll()
+                        .requestMatchers( "/member/check-auth", "/mypage", "/mypage/**", "/member/withdrawal", "/comment/**", "/delete/**").authenticated() //로그인 해야 가능
+                        .requestMatchers("/admin/**").hasRole("ADMIN") //관리자 권한만
+                        .anyRequest().authenticated()
+                )
+                // . . .
+        return http.build();
+    }
+  ```
+  
