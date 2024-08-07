@@ -6,6 +6,15 @@ http://43.201.50.190:8089
 - 서비스 기간 : ~2024.8.7
 - 관리자 계정 : admin@gmail.com (비밀번호 qwe123!@#)
 
+## 목차
+1. [프로젝트 개요](#-프로젝트-개요)
+2. [프로젝트 기간 & 팀원](#프로젝트-기간--팀원)
+3. [기술 스택](#기술-스택)
+4. [프로젝트 아키텍처](#프로젝트-아키텍처)
+5. [ERD](#erd)
+6. [주요 기능](#주요-기능)
+7. [이슈 트래킹](#이슈-트래킹)
+
 ## 💡 프로젝트 개요
 
 - 이스트소프트 오르미 백엔드 개발자 양성과정 5기
@@ -19,6 +28,8 @@ http://43.201.50.190:8089
 
 ## ⚙️ 기술 스택
 
+**BE**
+
 <img src="https://img.shields.io/badge/JAVA-007396?style=for-the-badge&logo=java&logoColor=white"> <img src="https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=Spring&logoColor=white">
 <img src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=SpringBoot&logoColor=white">
 <img src="https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=Spring-Security&logoColor=white">
@@ -26,13 +37,17 @@ http://43.201.50.190:8089
 <img src="https://img.shields.io/badge/mysql-4479A1?style=for-the-badge&logo=mysql&logoColor=white">
 <img src="https://img.shields.io/badge/redis-%23DD0031.svg?&style=for-the-badge&logo=redis&logoColor=white">
 </br>
-<img src="https://img.shields.io/badge/html-E34F26?style=for-the-badge&logo=html5&logoColor=white">
-<img src="https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
+
+**FE**
+
+<img src="https://img.shields.io/badge/html-E34F26?style=for-the-badge&logo=html5&logoColor=white"><img src="https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black">
 <img src="https://img.shields.io/badge/Thymeleaf-%23005C0F.svg?style=for-the-badge&logo=Thymeleaf&logoColor=white">
 <img src="https://img.shields.io/badge/bootstrap-%23563D7C.svg?style=for-the-badge&logo=bootstrap&logoColor=white">
 </br>
-<img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-aws&logoColor=white">
-<img src="https://img.shields.io/badge/AWS_Lightsail-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
+
+**TOOLS**
+
+<img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-aws&logoColor=white"><img src="https://img.shields.io/badge/AWS_Lightsail-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
 
 
 ## ⚙️ 프로젝트 아키텍쳐
