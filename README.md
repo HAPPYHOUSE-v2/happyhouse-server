@@ -1,8 +1,10 @@
 # HAAPYHOUSE
 공공 데이터를 활용한 주택 실거래정보 커뮤니티
 
-http://52.78.32.67:8089
+http://43.201.50.190:8089
 
+- 서비스 기간 : ~2024.8.7
+- 관리자 계정 : admin@gmail.com (비밀번호 qwe123!@#)
 
 ## 💡 프로젝트 개요
 
@@ -44,58 +46,65 @@ http://52.78.32.67:8089
 
 ## 🖥 기능
 
-> - **회원관리**
->
->   - **회원가입 & 이메일 인증**
->
->     <img src="https://github.com/user-attachments/assets/9f809607-a109-493a-8d93-023259bb29b6" width="500" height="400" alt="회원가입 이미지">
->     <img src="https://github.com/user-attachments/assets/6351bd2f-8a73-412e-80b8-56fe13c6c7e4" width="400" height="300" alt="이메일 인증 이미지">
->  
->   - **로그인 & 비밀번호 초기화**
-> 
->     <img src="https://github.com/user-attachments/assets/7920768b-3d45-4648-9d43-785eb78c7893" width="300" height="300" alt="로그인 이미지">
->     <img src="https://github.com/user-attachments/assets/4613a16c-4b1b-499a-b2c7-ffb2c0518705" width="400" height="300" alt="비밀번호 초기화 이미지">
->
->   - **마이페이지 (개인정보 수정 & 회원 탈퇴)**
->
->     <img src="https://github.com/user-attachments/assets/2f55a230-6cc9-4f50-906d-fe5eb67e00c5" width="500" height="300" alt="개인정보 수정 이미지">
->     <img src="https://github.com/user-attachments/assets/71438889-89c1-4349-9e15-52830f9d6920" width="500" height="300" alt="탈퇴 화면 이미지">
-> 
->   - **관리자 권한 인가 처리**
-> 
->     <img src="https://github.com/user-attachments/assets/a51d62da-eba4-407a-90a8-489d009b90d3" width="500" height="300" alt="개인정보 수정 이미지">
->     <img src="https://github.com/user-attachments/assets/4118e47c-d7c3-475a-98b7-058405d4cdfc" width="500" height="300" alt="탈퇴 화면 이미지">
->
-> - **커뮤니티 게시판**
->
->   - **게시글 목록**
->   
->     <img src="https://github.com/user-attachments/assets/1f814a7d-c9ab-476b-8d43-b23d276a3e0d" width="700" alt="게시글 목록 이미지">
->
->     
->   - **검색 & 페이징**
->  
->     <img src="https://github.com/user-attachments/assets/595a6f0e-fe83-4850-8b0b-8ffa32a94df7" width="700" alt="게시글 검색 이미지">
->     <img src="https://github.com/user-attachments/assets/557f8fce-dc44-4598-9338-25a317e4ce6d" width="700" alt="게시글 페이징 이미지">
-> 
->   - **게시글 상세 조회**
->
->     <img src="https://github.com/user-attachments/assets/0732ffe2-9aa4-42c1-93d9-a46dd86a3719" width="500" alt="게시글 상세 이미지">
->
-> 
->   - **등록 & 수정 & 삭제**
->
->     <img src="https://github.com/user-attachments/assets/4a93c38a-171f-4f73-b2df-bbd026fa80e6" width="500" alt="게시글 등록 이미지">
->     <img src="https://github.com/user-attachments/assets/c2a06c97-4332-427e-9f93-806b6aa40103" width="500" alt="게시글 삭제 이미지">
->
-> 
->   - **첨부파일 등록**
->  
->     <img src="https://github.com/user-attachments/assets/f292bec4-21d1-4195-a511-d9b7f6bb951d" width="500" alt="게시글 첨부 이미지">
->
-> 
->   - **댓글 등록 & 삭제**
->
->     <img src="https://github.com/user-attachments/assets/feaf07bc-d187-4894-b6b3-dabfd5a6af3b" width="500" alt="게시글 첨부 이미지">
->
+### 회원관리
+- **회원가입 & 이메일 인증**
+   - JavaMailSender, Redis를 사용하여 이메일 인증해야 회원가입 가능
+   - 닉네임 중복 확인 (Client fetchAPI로 비동기 통신)
+     
+     <img src="https://github.com/user-attachments/assets/9f809607-a109-493a-8d93-023259bb29b6" width="500" height="400" alt="회원가입 이미지">
+     <img src="https://github.com/user-attachments/assets/6351bd2f-8a73-412e-80b8-56fe13c6c7e4" width="400" height="300" alt="이메일 인증 이미지">
 
+- **로그인 & 비밀번호 초기화**
+  - JWT Access & Refresh Token으로 인증 및 인가 처리(Refresh Token은 Redis에 저장)
+  - Access Token 유효기간(15분)이 지나면 Refresh Token을 통해 Access Token 새로 발급
+  - 비밀번호 초기화 버튼 클릭 시 입력한 이메일 주소로 초기화된 이메일 전송(마이페이지에서 수정 가능)
+    
+    <img src="https://github.com/user-attachments/assets/7920768b-3d45-4648-9d43-785eb78c7893" width="300" height="300" alt="로그인 이미지">
+    <img src="https://github.com/user-attachments/assets/4613a16c-4b1b-499a-b2c7-ffb2c0518705" width="400" height="300" alt="비밀번호 초기화 이미지">
+
+- **마이페이지 (개인정보 수정 & 회원 탈퇴)**
+  - 닉네임, 비밀번호 수정
+    - 닉네임 중복 확인
+    -  비밀번호, 새 비밀번호 입력 시 검증
+  - 회원 탈퇴
+    - 비밀번호 입력 후 탈퇴 처리(status 값 변경, 해당 이메일로 다시 회원가입 불가)
+  
+  <img src="https://github.com/user-attachments/assets/2f55a230-6cc9-4f50-906d-fe5eb67e00c5" width="500" height="300" alt="개인정보 수정 이미지">
+  <img src="https://github.com/user-attachments/assets/71438889-89c1-4349-9e15-52830f9d6920" width="500" height="300" alt="탈퇴 화면 이미지">
+
+- **관리자 권한 인가 처리**
+  - ADMIN 권한을 가진 User만 관리자 페이지 접속 가능
+
+  <img src="https://github.com/user-attachments/assets/a51d62da-eba4-407a-90a8-489d009b90d3" width="500" height="300" alt="개인정보 수정 이미지">
+  <img src="https://github.com/user-attachments/assets/4118e47c-d7c3-475a-98b7-058405d4cdfc" width="500" height="300" alt="탈퇴 화면 이미지">
+
+- **커뮤니티 게시판**
+   - **게시글 목록**
+   
+     <img src="https://github.com/user-attachments/assets/1f814a7d-c9ab-476b-8d43-b23d276a3e0d" width="700" alt="게시글 목록 이미지">
+
+     
+   - **검색 & 페이징**
+  
+     <img src="https://github.com/user-attachments/assets/595a6f0e-fe83-4850-8b0b-8ffa32a94df7" width="700" alt="게시글 검색 이미지">
+     <img src="https://github.com/user-attachments/assets/557f8fce-dc44-4598-9338-25a317e4ce6d" width="700" alt="게시글 페이징 이미지">
+ 
+   - **게시글 상세 조회**
+
+     <img src="https://github.com/user-attachments/assets/0732ffe2-9aa4-42c1-93d9-a46dd86a3719" width="500" alt="게시글 상세 이미지">
+
+ 
+   - **등록 & 수정 & 삭제**
+
+     <img src="https://github.com/user-attachments/assets/4a93c38a-171f-4f73-b2df-bbd026fa80e6" width="500" alt="게시글 등록 이미지">
+     <img src="https://github.com/user-attachments/assets/c2a06c97-4332-427e-9f93-806b6aa40103" width="500" alt="게시글 삭제 이미지">
+
+ 
+   - **첨부파일 등록**
+  
+     <img src="https://github.com/user-attachments/assets/f292bec4-21d1-4195-a511-d9b7f6bb951d" width="500" alt="게시글 첨부 이미지">
+
+ 
+   - **댓글 등록 & 삭제**
+
+     <img src="https://github.com/user-attachments/assets/feaf07bc-d187-4894-b6b3-dabfd5a6af3b" width="500" alt="게시글 첨부 이미지">
