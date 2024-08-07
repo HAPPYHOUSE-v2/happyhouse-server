@@ -85,36 +85,36 @@ http://43.201.50.190:8089
      <img src="https://github.com/user-attachments/assets/1f814a7d-c9ab-476b-8d43-b23d276a3e0d" width="700" alt="게시글 목록 이미지">
 
      
-   - **검색 & 페이징**
-     - 검색
-        - 입력받은 단어를 포함하고 있는 제목 조회
-     - 페이징
-        - 10개의 게시글 마다 1페이지
-        - `>` 클릭 시 5개 페이지 이동, `>>` 클릭시 마지막 페이지로 이동
+- **검색 & 페이징**
+  - 검색
+     - 입력받은 단어를 포함하고 있는 제목 조회
+  - 페이징
+     - 10개의 게시글 마다 1페이지
+     - `>` 클릭 시 5개 페이지 이동, `>>` 클릭시 마지막 페이지로 이동
      <img src="https://github.com/user-attachments/assets/595a6f0e-fe83-4850-8b0b-8ffa32a94df7" width="700" alt="게시글 검색 이미지">
      <img src="https://github.com/user-attachments/assets/557f8fce-dc44-4598-9338-25a317e4ce6d" width="700" alt="게시글 페이징 이미지">
  
-   - **게시글 상세 조회**
-      - 게시글 상세 조회를 할 때 토큰 확인을 해서 각 사용자별로 적합한 기능 조회
-      - 입력요소 - 제목, 내용, 첨부파일
-      - 조회요소 - 닉네임, 작성일자, 조회수, 댓글
+- **게시글 상세 조회**
+   - 게시글 상세 조회를 할 때 토큰 확인을 해서 각 사용자별로 적합한 기능 조회
+   - 입력요소 - 제목, 내용, 첨부파일
+   - 조회요소 - 닉네임, 작성일자, 조회수, 댓글
      <img src="https://github.com/user-attachments/assets/0732ffe2-9aa4-42c1-93d9-a46dd86a3719" width="500" alt="게시글 상세 이미지">
 
- 
-   - **등록 & 수정 & 삭제**
-     - 작성자만 수정 및 삭제 버튼 조회 가능
+
+- **등록 & 수정 & 삭제**
+  - 작성자만 수정 및 삭제 버튼 조회 가능
      <img src="https://github.com/user-attachments/assets/4a93c38a-171f-4f73-b2df-bbd026fa80e6" width="500" alt="게시글 등록 이미지">
      <img src="https://github.com/user-attachments/assets/c2a06c97-4332-427e-9f93-806b6aa40103" width="500" alt="게시글 삭제 이미지">
 
  
-   - **첨부파일 등록**
-     - AWS S3 버킷을 이용한 첨부파일 기능
-     - 입력받은 MultipartFile을 S3 버킷에 등록 후(amazonS3.putObject) url 받아오기(amazonS3.getUrl)
+- **첨부파일 등록**
+  - AWS S3 버킷을 이용한 첨부파일 기능
+  - 입력받은 MultipartFile을 S3 버킷에 등록 후(amazonS3.putObject) url 받아오기(amazonS3.getUrl)
      <img src="https://github.com/user-attachments/assets/f292bec4-21d1-4195-a511-d9b7f6bb951d" width="500" alt="게시글 첨부 이미지">
 
  
-   - **댓글 등록 & 삭제**
-     - 상세 게시글 페이지에서 댓글 등록 / 삭제 기능
+- **댓글 등록 & 삭제**
+  - 상세 게시글 페이지에서 댓글 등록 / 삭제 기능
      <img src="https://github.com/user-attachments/assets/feaf07bc-d187-4894-b6b3-dabfd5a6af3b" width="500" alt="게시글 첨부 이미지">
 
 
