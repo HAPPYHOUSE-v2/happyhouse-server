@@ -8,12 +8,12 @@ http://43.201.50.190:8089
 
 ## 목차
 1. [프로젝트 개요](#-프로젝트-개요)
-2. [프로젝트 기간 & 팀원](#프로젝트-기간--팀원)
-3. [기술 스택](#기술-스택)
-4. [프로젝트 아키텍처](#프로젝트-아키텍처)
-5. [ERD](#erd)
-6. [주요 기능](#주요-기능)
-7. [이슈 트래킹](#이슈-트래킹)
+2. [프로젝트 기간 & 팀원](#-프로젝트-기간--팀원)
+3. [기술 스택](#-기술-스택)
+4. [프로젝트 아키텍처](#-architecture)
+5. [ERD](#-erd)
+6. [주요 기능](#-주요-기능)
+7. [이슈 트래킹](#-이슈-트래킹)
 
 ## 💡 프로젝트 개요
 
@@ -50,7 +50,7 @@ http://43.201.50.190:8089
 <img src="https://img.shields.io/badge/AWS_S3-569A31?style=for-the-badge&logo=amazon-aws&logoColor=white"><img src="https://img.shields.io/badge/AWS_Lightsail-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
 
 
-## ⚙️ 프로젝트 아키텍쳐
+## ⚙️ Architecture
 ![image](https://github.com/user-attachments/assets/aad13bd5-114b-4ce9-ad29-1074adbbfea4)
 
 
