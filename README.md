@@ -35,7 +35,7 @@ http://43.201.50.190:8089
 <img src="https://img.shields.io/badge/AWS_Lightsail-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white">
 
 
-## ⚙️ 프로젝트 구성
+## ⚙️ 프로젝트 아키텍쳐
 ![image](https://github.com/user-attachments/assets/aad13bd5-114b-4ce9-ad29-1074adbbfea4)
 
 
@@ -116,3 +116,7 @@ http://43.201.50.190:8089
    - **댓글 등록 & 삭제**
      - 상세 게시글 페이지에서 댓글 등록 / 삭제 기능
      <img src="https://github.com/user-attachments/assets/feaf07bc-d187-4894-b6b3-dabfd5a6af3b" width="500" alt="게시글 첨부 이미지">
+
+
+## ⚠️ 이슈 트래킹
+
