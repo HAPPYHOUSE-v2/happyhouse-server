@@ -207,4 +207,35 @@ http://43.201.50.190:8089
         return http.build();
     }
   ```
+---
+
+### 기본 페이징 정렬은 하나의 값만 가능
   
+  - 기존 페이징은 하나의 정렬만 사용 가능.
+  - noticeYn에 대한 내림차순과, createAt에 대한 내림차순을 동시에 사용하고 싶음.
+
+  [기존페이징]
+     ```java
+     @GetMapping
+      public String showAllPost(@PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+       
+   		    Page<Post> posts = postService.showAllPost(pageable);
+           
+      }
+      ```
+
+  - 해결
+     -  @SortDefault.SortDefaults()를 이용해서 2가지 정렬을 동시에 적용
+   
+      ```java
+       @GetMapping
+         public String showAllPost(
+                 @PageableDefault(page = 0, size = 10)
+                 @SortDefault.SortDefaults({
+                         @SortDefault(sort = "noticeYn", direction = Sort.Direction.DESC),
+                         @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC)
+                 })
+                 Pageable pageable) {
+             Page<Post> posts = postService.showAllPost(pageable);
+         }
+      ```
